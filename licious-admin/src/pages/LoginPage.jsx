@@ -90,7 +90,7 @@ function OtpIcon() {
   )
 }
 
-export default function LoginPage() {
+export default function LoginPage({ onLogin }) {
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -223,6 +223,7 @@ export default function LoginPage() {
             <button
               id="login-btn"
               type="button"
+              onClick={onLogin}
               className="w-full bg-[#e32929] hover:bg-[#c41f1f] active:bg-[#a81a1a] text-white font-semibold py-3 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg text-sm tracking-wide"
             >
               Login
@@ -239,6 +240,7 @@ export default function LoginPage() {
             <button
               id="login-otp-btn"
               type="button"
+              onClick={onLogin}
               className="w-full flex items-center justify-center gap-2 border border-[#e32929] text-[#e32929] hover:bg-red-50 active:bg-red-100 font-semibold py-3 rounded-lg transition-all duration-200 text-sm tracking-wide"
             >
               <OtpIcon />
