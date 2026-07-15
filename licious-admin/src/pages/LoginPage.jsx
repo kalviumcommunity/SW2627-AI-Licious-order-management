@@ -2,13 +2,13 @@ import { useState } from 'react'
 import meatHero from '../assets/meat_hero.png'
 
 // Licious Logo — drop your logo.png into the public/ folder
-function LiciousLogo({ className = '', invert = false }) {
+function LiciousLogo({ className = '', invert = false, src = '/logo.png' }) {
   return (
-    <div className={`flex items-center ${className}`}>
+    <div className="flex items-center">
       <img
-        src="/logo.png"
+        src={src}
         alt="Licious"
-        className={`h-10 w-auto object-contain ${invert ? 'brightness-0 invert' : ''}`}
+        className={`${className} w-auto object-contain ${invert ? 'brightness-0 invert' : ''}`}
       />
     </div>
   )
@@ -96,165 +96,145 @@ export default function LoginPage({ onLogin }) {
   const [password, setPassword] = useState('')
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden font-[Inter,system-ui,sans-serif]">
+    <div className="flex min-h-screen w-full overflow-hidden bg-[#f3f7fb] font-[Inter,system-ui,sans-serif]">
 
-        {/* ── LEFT PANEL ── */}
-        <div className="relative hidden md:flex md:w-[42%] flex-col bg-[#e32929] overflow-hidden">
+      {/* ── LEFT PANEL ── */}
+      <div className="relative hidden md:flex md:w-[44%] flex-col bg-[#e32929] text-white overflow-hidden">
+        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[#e32929]/20" />
+        <div className="absolute -top-6 -right-6 w-56 h-56 rounded-[48px] bg-[#e32929]/40" />
 
-          {/* Top white curve cutout */}
-          <div className="absolute top-0 right-0 w-20 h-20 bg-white rounded-bl-[80px]" />
-
-          {/* Logo */}
-          <div className="relative z-10 pt-8 pl-8">
-            <LiciousLogo invert={true} />
+        <div className="relative z-10 flex h-full flex-col px-10 py-10">
+          <div className="mb-10">
+            <LiciousLogo className="h-20" src="/logo.png?v=2" />
           </div>
 
-          {/* Headline */}
-          <div className="relative z-10 mt-10 px-8">
-            <h1 className="text-white text-4xl font-extrabold leading-tight tracking-tight">
+          <div className="max-w-xs">
+            <h1 className="text-5xl font-extrabold leading-tight tracking-tight">
               Real Good.<br />Admin Access.
             </h1>
-            <p className="text-red-100 text-sm mt-4 leading-relaxed max-w-xs">
-              Welcome to the Licious Admin Portal. Manage orders, customers,
-              inventory and more — all in one place.
+            <p className="mt-5 text-sm text-red-100 leading-relaxed">
+              Welcome to the Licious Admin Portal. Manage orders, customers, inventory and more — all in one place.
             </p>
           </div>
 
-          {/* Meat Hero Image */}
-          <div className="relative z-10 flex justify-center mt-6 px-4">
+          <div className="mt-10 flex justify-center">
             <img
               src={meatHero}
               alt="Fresh premium meat"
-              className="w-72 drop-shadow-2xl object-contain"
+              className="w-80 object-contain drop-shadow-[0_30px_50px_rgba(0,0,0,0.18)]"
             />
           </div>
 
-          {/* Dark bottom bar with quality badges */}
-          <div className="relative z-10 mt-auto bg-[#c41f1f] px-6 py-5">
-            <div className="flex items-center justify-between text-white text-xs">
-              <div className="flex flex-col items-center gap-1">
+          <div className="mt-auto rounded-[28px] bg-[#c41f1f] p-6 shadow-[0_12px_30px_rgba(0,0,0,0.16)]">
+            <div className="grid grid-cols-3 gap-4 text-center text-xs font-semibold text-white">
+              <div className="flex flex-col items-center gap-2">
                 <ShieldIcon />
-                <span className="font-semibold text-center leading-tight">Trusted<br />Quality</span>
+                <span>Trusted Quality</span>
               </div>
-              <div className="w-px h-10 bg-red-300 opacity-50" />
-              <div className="flex flex-col items-center gap-1">
+              <div className="flex flex-col items-center gap-2">
                 <SnowflakeIcon />
-                <span className="font-semibold text-center leading-tight">Freshly<br />Made</span>
+                <span>Freshly Made</span>
               </div>
-              <div className="w-px h-10 bg-red-300 opacity-50" />
-              <div className="flex flex-col items-center gap-1">
+              <div className="flex flex-col items-center gap-2">
                 <HeartIcon />
-                <span className="font-semibold text-center leading-tight">Hygenically<br />Packed</span>
+                <span>Hygenically Packed</span>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* ── RIGHT PANEL ── */}
-        <div className="flex-1 bg-white flex flex-col items-center justify-center px-8 py-12 md:px-14">
-
-          {/* Logo for right side */}
-          <div className="mb-2">
-            <LiciousLogo />
+      {/* ── RIGHT PANEL ── */}
+      <div className="flex flex-1 items-center justify-center px-6 py-10 md:px-14">
+        <div className="w-full max-w-[470px]">
+          <div className="mb-8 flex flex-col items-center gap-3 text-center">
+            <LiciousLogo className="h-20" src="/logo.png?v=3" />
+            <h2 className="text-3xl font-bold text-gray-900">Admin Login</h2>
+            <p className="text-sm text-gray-500">Access your admin dashboard</p>
           </div>
 
-          {/* Title */}
-          <h2 className="text-2xl font-bold text-gray-900 mt-1">Admin Login</h2>
-          <p className="text-gray-500 text-sm mt-1 mb-8">Access your admin dashboard</p>
-
-          {/* Form Card */}
-          <div className="w-full max-w-sm border border-gray-200 rounded-xl p-7 shadow-sm">
-
-            {/* Email Field */}
-            <div className="mb-5">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </label>
-              <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2.5 gap-2 focus-within:border-[#e32929] focus-within:ring-1 focus-within:ring-[#e32929] transition-all">
-                <EmailIcon />
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email address"
-                  className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
-                />
+          <div className="overflow-hidden rounded-[30px] border border-black/10 bg-white p-8 shadow-[0_25px_90px_rgba(15,23,42,0.08)]">
+            <div className="space-y-6">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <div className="flex items-center gap-3 rounded-[18px] border border-gray-200 bg-white px-4 py-3 focus-within:border-[#e32929] focus-within:ring-1 focus-within:ring-[#e32929]/20">
+                  <EmailIcon />
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email address"
+                    className="w-full border-none bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Password Field */}
-            <div className="mb-2">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2.5 gap-2 focus-within:border-[#e32929] focus-within:ring-1 focus-within:ring-[#e32929] transition-all">
-                <LockIcon />
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label="Toggle password visibility"
-                >
-                  {showPassword ? <EyeIcon /> : <EyeOffIcon />}
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <div className="flex items-center gap-3 rounded-[18px] border border-gray-200 bg-white px-4 py-3 focus-within:border-[#e32929] focus-within:ring-1 focus-within:ring-[#e32929]/20">
+                  <LockIcon />
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="w-full border-none bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-gray-400 hover:text-gray-600"
+                    aria-label="Toggle password visibility"
+                  >
+                    {showPassword ? <EyeIcon /> : <EyeOffIcon />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button type="button" className="text-xs font-semibold text-[#e32929] hover:underline">
+                  Forgot password ?
                 </button>
               </div>
-            </div>
 
-            {/* Forgot Password */}
-            <div className="flex justify-end mb-6">
               <button
+                id="login-btn"
                 type="button"
-                className="text-xs text-[#e32929] hover:underline transition-all"
+                onClick={onLogin}
+                className="w-full rounded-[18px] bg-[#e32929] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(227,41,41,0.22)] transition hover:bg-[#c41f1f]"
               >
-                Forgot password ?
+                Login
+              </button>
+
+              <div className="flex items-center gap-3 text-xs text-gray-400">
+                <div className="h-px flex-1 bg-gray-200" />
+                <span>or</span>
+                <div className="h-px flex-1 bg-gray-200" />
+              </div>
+
+              <button
+                id="login-otp-btn"
+                type="button"
+                onClick={onLogin}
+                className="flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#e32929] bg-white px-5 py-3 text-sm font-semibold text-[#e32929] transition hover:bg-red-50"
+              >
+                <OtpIcon />
+                Login With OTP
               </button>
             </div>
-
-            {/* Login Button */}
-            <button
-              id="login-btn"
-              type="button"
-              onClick={onLogin}
-              className="w-full bg-[#e32929] hover:bg-[#c41f1f] active:bg-[#a81a1a] text-white font-semibold py-3 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg text-sm tracking-wide"
-            >
-              Login
-            </button>
-
-            {/* OR Divider */}
-            <div className="flex items-center gap-3 my-5">
-              <div className="flex-1 h-px bg-gray-200" />
-              <span className="text-xs text-gray-400">or</span>
-              <div className="flex-1 h-px bg-gray-200" />
-            </div>
-
-            {/* Login with OTP Button */}
-            <button
-              id="login-otp-btn"
-              type="button"
-              onClick={onLogin}
-              className="w-full flex items-center justify-center gap-2 border border-[#e32929] text-[#e32929] hover:bg-red-50 active:bg-red-100 font-semibold py-3 rounded-lg transition-all duration-200 text-sm tracking-wide"
-            >
-              <OtpIcon />
-              Login With OTP
-            </button>
           </div>
 
-          {/* Footer */}
-          <p className="text-xs text-gray-400 mt-8">
-            © 2026{' '}
-            <span className="text-[#e32929] font-medium">Licious</span>
-            {' '}. All rights reserved
+          <p className="mt-8 text-center text-xs text-gray-400">
+            © 2026 <span className="font-semibold text-[#e32929]">Licious</span>. All rights reserved
           </p>
         </div>
+      </div>
     </div>
   )
 }
