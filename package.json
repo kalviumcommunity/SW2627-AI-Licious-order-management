@@ -4,6 +4,9 @@
   "description": "Licious Order Management is a real-time order and inventory management system designed to help shop owners efficiently handle incoming orders without refreshing the page. The application enables seamless order tracking, live inventory updates, and maintains a complete audit trail of inventory changes.",
   "main": "index.js",
   "scripts": {
+    "dev": "npm --prefix ./licious-admin run dev",
+    "build": "npm --prefix ./licious-admin run build",
+    "preview": "npm --prefix ./licious-admin run preview",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
