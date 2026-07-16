@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import meatHero from '../assets/meat_hero.png'
+import supabase, { isSupabaseConfigured } from '../lib/supabase'
 
 // Licious Logo — drop your logo.png into the public/ folder
 function LiciousLogo({ className = '', invert = false, src = '/logo.png' }) {
@@ -90,10 +91,85 @@ function OtpIcon() {
   )
 }
 
-export default function LoginPage({ onLogin }) {
+export default function LoginPage({ onLogin, isSupabaseConfigured: hasSupabaseConfig = isSupabaseConfigured }) {
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [isSignUp, setIsSignUp] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+
+    if (!supabase || !hasSupabaseConfig) {
+      setError('Supabase is not configured yet. Add your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to the admin .env file.')
+      return
+    }
+
+    if (!email || !password) {
+      setError('Please enter both your email and password.')
+      return
+    }
+
+    setIsLoading(true)
+    setError('')
+    setMessage('')
+
+    const action = isSignUp
+      ? supabase.auth.signUp({ email, password })
+      : supabase.auth.signInWithPassword({ email, password })
+
+    const { data, error: authError } = await action
+
+    setIsLoading(false)
+
+    if (authError) {
+      setError(authError.message || 'Authentication failed. Please try again.')
+      return
+    }
+
+    if (isSignUp) {
+      setMessage('Account created. Please check your inbox and confirm your email if required.')
+      setPassword('')
+      setIsSignUp(false)
+      return
+    }
+
+    onLogin?.()
+  }
+
+  const handleOtpLogin = async () => {
+    if (!supabase || !hasSupabaseConfig) {
+      setError('Supabase is not configured yet. Add your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to the admin .env file.')
+      return
+    }
+
+    if (!email) {
+      setError('Please enter your email to receive a magic link.')
+      return
+    }
+
+    setIsLoading(true)
+    setError('')
+    setMessage('')
+
+    const redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined
+    const { error: authError } = await supabase.auth.signInWithOtp({
+      email,
+      options: redirectTo ? { emailRedirectTo: redirectTo } : undefined
+    })
+
+    setIsLoading(false)
+
+    if (authError) {
+      setError(authError.message || 'Unable to send the magic link right now.')
+      return
+    }
+
+    setMessage('Check your email for a sign-in link.')
+  }
 
   return (
     <div className="flex min-h-screen w-full overflow-hidden bg-[#f3f7fb] font-[Inter,system-ui,sans-serif]">
@@ -149,12 +225,24 @@ export default function LoginPage({ onLogin }) {
         <div className="w-full max-w-[470px]">
           <div className="mb-8 flex flex-col items-center gap-3 text-center">
             <LiciousLogo className="h-20" src="/logo.png?v=3" />
-            <h2 className="text-3xl font-bold text-gray-900">Admin Login</h2>
-            <p className="text-sm text-gray-500">Access your admin dashboard</p>
+            <h2 className="text-3xl font-bold text-gray-900">{isSignUp ? 'Create Admin Account' : 'Admin Login'}</h2>
+            <p className="text-sm text-gray-500">{isSignUp ? 'Register a new admin account' : 'Access your admin dashboard'}</p>
           </div>
 
           <div className="overflow-hidden rounded-[30px] border border-black/10 bg-white p-8 shadow-[0_25px_90px_rgba(15,23,42,0.08)]">
-            <div className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              {error ? (
+                <div className="rounded-[16px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                  {error}
+                </div>
+              ) : null}
+
+              {message ? (
+                <div className="rounded-[16px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  {message}
+                </div>
+              ) : null}
+
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                   Email Address
@@ -197,19 +285,25 @@ export default function LoginPage({ onLogin }) {
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <button type="button" className="text-xs font-semibold text-[#e32929] hover:underline">
-                  Forgot password ?
-                </button>
-              </div>
-
               <button
                 id="login-btn"
-                type="button"
-                onClick={onLogin}
-                className="w-full rounded-[18px] bg-[#e32929] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(227,41,41,0.22)] transition hover:bg-[#c41f1f]"
+                type="submit"
+                disabled={isLoading}
+                className="w-full rounded-[18px] bg-[#e32929] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(227,41,41,0.22)] transition hover:bg-[#c41f1f] disabled:cursor-not-allowed disabled:opacity-70"
               >
-                Login
+                {isLoading ? 'Please wait...' : isSignUp ? 'Sign Up' : 'Login'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSignUp((value) => !value)
+                  setError('')
+                  setMessage('')
+                }}
+                className="w-full text-sm font-semibold text-[#e32929] hover:underline"
+              >
+                {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
               </button>
 
               <div className="flex items-center gap-3 text-xs text-gray-400">
@@ -221,13 +315,14 @@ export default function LoginPage({ onLogin }) {
               <button
                 id="login-otp-btn"
                 type="button"
-                onClick={onLogin}
-                className="flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#e32929] bg-white px-5 py-3 text-sm font-semibold text-[#e32929] transition hover:bg-red-50"
+                onClick={handleOtpLogin}
+                disabled={isLoading}
+                className="flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#e32929] bg-white px-5 py-3 text-sm font-semibold text-[#e32929] transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 <OtpIcon />
                 Login With OTP
               </button>
-            </div>
+            </form>
           </div>
 
           <p className="mt-8 text-center text-xs text-gray-400">

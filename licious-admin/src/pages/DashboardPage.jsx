@@ -65,7 +65,7 @@ function LiciousLogo({ className = '', invert = false }) {
   )
 }
 
-export default function DashboardPage({ onLogout }) {
+export default function DashboardPage({ user, onLogout }) {
   // Navigation & UI States
   const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard', 'live-orders', 'completed-orders', etc.
   const [isOrdersDropdownOpen, setIsOrdersDropdownOpen] = useState(true)
@@ -410,6 +410,7 @@ export default function DashboardPage({ onLogout }) {
                 </div>
                 <div className="hidden sm:block">
                   <p className="text-xs font-semibold text-gray-800">Admin</p>
+                  <p className="max-w-[140px] truncate text-[11px] text-gray-500">{user?.email ?? 'Signed in'}</p>
                 </div>
                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -420,6 +421,11 @@ export default function DashboardPage({ onLogout }) {
                   <div className="fixed inset-0 z-10" onClick={() => setIsProfileOpen(false)} />
                   {/* Dropdown Menu */}
                   <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-20 animate-fade-in-up">
+                    <div className="px-4 py-2 text-sm text-gray-600">
+                      <p className="font-semibold text-gray-800">{user?.email ?? 'Admin'}</p>
+                      <p className="text-xs text-gray-500">Signed in securely</p>
+                    </div>
+                    <div className="h-px bg-gray-100 my-1" />
                     <button
                       onClick={() => {
                         setActiveTab('settings')
