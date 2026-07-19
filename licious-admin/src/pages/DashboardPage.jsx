@@ -18,11 +18,7 @@ import {
   Truck,
   Clock,
   CircleDot,
-  MoreVertical,
-  TrendingUp,
-  Edit2,
-  CheckCircle2,
-  Trash2
+  MoreVertical
 } from 'lucide-react'
 import './DashboardPage.css'
 
