@@ -121,7 +121,7 @@ export default function LoginPage({ onLogin, isSupabaseConfigured: hasSupabaseCo
       ? supabase.auth.signUp({ email, password })
       : supabase.auth.signInWithPassword({ email, password })
 
-    const { data, error: authError } = await action
+    const { error: authError } = await action
 
     setIsLoading(false)
 

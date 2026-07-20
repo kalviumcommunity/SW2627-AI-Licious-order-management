@@ -16,12 +16,19 @@ function App() {
   const [isAuthLoading, setIsAuthLoading] = useState(true)
 
   useEffect(() => {
+    let isMounted = true
+
     if (!supabase) {
-      setIsAuthLoading(false)
-      return
+      queueMicrotask(() => {
+        if (isMounted) {
+          setIsAuthLoading(false)
+        }
+      })
+      return () => {
+        isMounted = false
+      }
     }
 
-    let isMounted = true
 
     const initializeSession = async () => {
       const { data: { session }, error } = await supabase.auth.getSession()

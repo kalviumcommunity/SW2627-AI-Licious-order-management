@@ -18,8 +18,7 @@ import {
   Truck,
   Clock,
   CircleDot,
-  MoreVertical,
-  ArrowLeft
+  MoreVertical
 } from 'lucide-react'
 import './DashboardPage.css'
 import InventorySection from './InventorySection'
