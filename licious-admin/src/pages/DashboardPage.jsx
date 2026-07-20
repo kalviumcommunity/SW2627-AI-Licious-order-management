@@ -19,12 +19,10 @@ import {
   Clock,
   CircleDot,
   MoreVertical,
-  TrendingUp,
-  Edit2,
-  CheckCircle2,
-  Trash2
+  ArrowLeft
 } from 'lucide-react'
 import './DashboardPage.css'
+import InventorySection from './InventorySection'
 
 // Import assets
 import chickenCurryImg from '../assets/chicken_curry.jpg'
@@ -65,9 +63,9 @@ function LiciousLogo({ className = '', invert = false }) {
   )
 }
 
-export default function DashboardPage({ user, onLogout }) {
+export default function DashboardPage({ user, onLogout, initialActiveTab = 'dashboard' }) {
   // Navigation & UI States
-  const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard', 'live-orders', 'completed-orders', etc.
+  const [activeTab, setActiveTab] = useState(initialActiveTab) // 'dashboard', 'live-orders', 'completed-orders', etc.
   const [isOrdersDropdownOpen, setIsOrdersDropdownOpen] = useState(true)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
@@ -374,11 +372,16 @@ export default function DashboardPage({ user, onLogout }) {
               <Menu className="w-6 h-6" />
             </button>
             <h1 className="text-xl font-bold text-gray-900 capitalize tracking-tight">
-              {activeTab === 'dashboard' ? 'DashBoard' : activeTab.replace('-', ' ')}
+              {activeTab === 'dashboard'
+                ? 'DashBoard'
+                : activeTab === 'inventory'
+                ? 'Inventory Management'
+                : activeTab.replace('-', ' ')}
             </h1>
           </div>
 
-          {/* Search bar inside Header */}
+          {/* Search bar inside Header — hidden on Inventory tab (has its own search) */}
+          {activeTab !== 'inventory' && (
           <div className="hidden md:flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 w-80 focus-within:border-[#e32929] focus-within:ring-1 focus-within:ring-[#e32929] transition-all">
             <Search className="w-4 h-4 text-gray-400 mr-2.5 flex-shrink-0" />
             <input
@@ -389,6 +392,7 @@ export default function DashboardPage({ user, onLogout }) {
               className="w-full bg-transparent text-sm text-gray-700 outline-none placeholder-gray-400"
             />
           </div>
+          )}
 
           <div className="flex items-center gap-5">
             {/* Notification Bell Icon */}
@@ -398,6 +402,17 @@ export default function DashboardPage({ user, onLogout }) {
                 5
               </span>
             </button>
+
+            {/* Back button — shown on Inventory tab per design reference */}
+            {activeTab === 'inventory' && (
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className="p-2.5 text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-full border border-gray-200 transition-all"
+                aria-label="Back to dashboard"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            )}
 
             {/* Profile Dropdown Badge */}
             <div className="relative">
@@ -451,7 +466,8 @@ export default function DashboardPage({ user, onLogout }) {
           </div>
         </header>
 
-        {/* Search bar for Mobile screens */}
+        {/* Search bar for Mobile screens — hidden on Inventory tab */}
+        {activeTab !== 'inventory' && (
         <div className="md:hidden p-4 bg-white border-b border-gray-150 flex-shrink-0">
           <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2">
             <Search className="w-4 h-4 text-gray-400 mr-2.5 flex-shrink-0" />
@@ -464,6 +480,7 @@ export default function DashboardPage({ user, onLogout }) {
             />
           </div>
         </div>
+        )}
 
         {/* ── SCROLLABLE BODY WORKSPACE ── */}
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6">
@@ -1025,13 +1042,15 @@ export default function DashboardPage({ user, onLogout }) {
             </div>
           )}
 
+          {/* ──── VIEW: INVENTORY TAB ──── */}
+          {activeTab === 'inventory' && <InventorySection />}
+
           {/* ──── OTHER NAVIGATION TABS (PLACEHOLDER PAGES) ──── */}
-          {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && (
+          {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && activeTab !== 'inventory' && (
             <div className="bg-white border border-gray-150 rounded-2xl p-12 text-center shadow-sm animate-fade-in-up space-y-4 max-w-lg mx-auto mt-10">
               <div className="w-16 h-16 bg-red-50 text-[#e32929] rounded-full flex items-center justify-center mx-auto">
                 {activeTab === 'users' && <Users className="w-8 h-8" />}
                 {activeTab === 'products' && <Package className="w-8 h-8" />}
-                {activeTab === 'inventory' && <ScrollText className="w-8 h-8" />}
                 {activeTab === 'offers' && <Tag className="w-8 h-8" />}
                 {activeTab === 'reports' && <BarChart3 className="w-8 h-8" />}
                 {activeTab === 'settings' && <Settings className="w-8 h-8" />}
