@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import meatHero from '../assets/meat_hero.png'
+import meatHero from '../assets/meat_hero_transparent.png'
 
 // Licious Logo — drop your logo.png into the public/ folder
 function LiciousLogo({ className = '', invert = false, src = '/logo.png' }) {
@@ -105,9 +105,7 @@ export default function LoginPage({ onLogin }) {
 
         <div className="relative z-10 flex h-full flex-col px-10 py-10">
           <div className="mb-10">
-            <div className="inline-block rounded-md bg-[#e32929] p-1 isolate">
-              <LiciousLogo className="h-20 mix-blend-multiply block" src="/logo.png?v=2" />
-            </div>
+            <LiciousLogo className="h-20 block" src="/logo_white.png" />
           </div>
 
           <div className="max-w-xs">
@@ -120,7 +118,7 @@ export default function LoginPage({ onLogin }) {
           </div>
 
           <div className="mt-10 flex justify-center">
-            <div className="rounded-[24px] bg-[#c41f1f] p-2 shadow-[0_12px_30px_rgba(0,0,0,0.16)]">
+            <div className="rounded-[24px] bg-[#e32929] p-2 shadow-[0_12px_30px_rgba(0,0,0,0.16)]">
               <img
                 src={meatHero}
                 alt="Fresh premium meat"
