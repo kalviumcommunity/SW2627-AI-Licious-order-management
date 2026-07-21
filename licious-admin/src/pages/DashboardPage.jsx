@@ -367,6 +367,7 @@ export default function DashboardPage({ onLogout }) {
         {/* ── TOP HEADER BAR ── */}
         <header className="h-20 bg-white border-b border-gray-150 px-6 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-4">
+            {/* Back button removed from header per request */}
             <button
               className="lg:hidden text-gray-600 hover:text-gray-900 transition-colors p-1.5 rounded-lg hover:bg-gray-50"
               onClick={() => setIsMobileSidebarOpen(true)}
@@ -747,11 +748,11 @@ export default function DashboardPage({ onLogout }) {
                   <div className="grid grid-cols-2 gap-4 flex-1 items-center">
                     {popularItems.map((item, idx) => (
                       <div key={idx} className="flex items-center gap-3">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-12 h-12 rounded-full object-cover border border-gray-100 shadow-sm"
-                        />
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-12 h-12 rounded-full object-cover bg-[#e32929] shadow-sm"
+                          />
                         <div>
                           <p className="text-[10px] text-gray-400 font-medium leading-tight line-clamp-1">{item.name}</p>
                           <p className="text-sm font-extrabold text-gray-800 mt-0.5">₹{item.price}</p>
