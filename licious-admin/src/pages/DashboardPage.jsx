@@ -18,10 +18,12 @@ import {
   Truck,
   Clock,
   CircleDot,
-  MoreVertical
+  MoreVertical,
+  Edit2,
+  Trash2,
+  ArrowLeft
 } from 'lucide-react'
 import './DashboardPage.css'
-import InventorySection from './InventorySection'
 
 // Import assets
 import chickenCurryImg from '../assets/chicken_curry.jpg'
@@ -34,7 +36,6 @@ import chickenBiryaniImg from '../assets/chicken_biryani.jpg'
 // Inline Vector Licious Logo Component
 function LiciousLogo({ className = '', invert = false }) {
   const textColor = invert ? '#ffffff' : '#111827'
-  const accentColor = '#e32929'
 
   return (
     <div className={`flex items-center gap-3 rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 px-3 py-2.5 shadow-sm ${className}`}>
@@ -1467,7 +1468,7 @@ export default function DashboardPage({ user, onLogout, initialActiveTab = 'dash
                         {filteredInventory.length === 0 && (
                           <tr>
                             <td colSpan="6" className="py-12 text-center text-gray-400 font-semibold bg-white rounded-b-2xl">
-                              No inventory products found matching your search.
+                              {inventory.length === 0 ? 'No inventory items found' : 'No inventory products found matching your search.'}
                             </td>
                           </tr>
                         )}

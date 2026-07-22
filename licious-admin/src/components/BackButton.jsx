@@ -1,5 +1,3 @@
-import React from 'react'
-
 export default function BackButton({ className = '', onClick }) {
   const handle = onClick || (() => window.history.back())
   return (

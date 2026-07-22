@@ -233,7 +233,9 @@ export default function InventorySection() {
         </table>
 
         {filteredInventory.length === 0 && (
-          <div className="inventory-empty">No products match your search.</div>
+          <div className="inventory-empty">
+            {inventory.length === 0 ? 'No inventory items found' : 'No products match your search.'}
+          </div>
         )}
       </div>
 
@@ -297,7 +299,9 @@ export default function InventorySection() {
         ))}
 
         {filteredInventory.length === 0 && (
-          <div className="inventory-empty">No products match your search.</div>
+          <div className="inventory-empty">
+            {inventory.length === 0 ? 'No inventory items found' : 'No products match your search.'}
+          </div>
         )}
       </div>
     </div>
