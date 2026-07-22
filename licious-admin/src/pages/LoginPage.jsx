@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import meatHero from '../assets/meat_hero_transparent.png'
-import meatHero from '../assets/meat_hero.png'
 import supabase, { isSupabaseConfigured } from '../lib/supabase'
 
 // Licious Logo — drop your logo.png into the public/ folder
