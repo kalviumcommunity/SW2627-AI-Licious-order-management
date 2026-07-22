@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import meatHero from '../assets/meat_hero_transparent.png'
 import meatHero from '../assets/meat_hero.png'
 import supabase, { isSupabaseConfigured } from '../lib/supabase'
 
@@ -181,7 +182,7 @@ export default function LoginPage({ onLogin, isSupabaseConfigured: hasSupabaseCo
 
         <div className="relative z-10 flex h-full flex-col px-10 py-10">
           <div className="mb-10">
-            <LiciousLogo className="h-20" src="/logo.png?v=2" />
+            <LiciousLogo className="h-20 block" src="/logo_white.png" />
           </div>
 
           <div className="max-w-xs">
@@ -194,11 +195,13 @@ export default function LoginPage({ onLogin, isSupabaseConfigured: hasSupabaseCo
           </div>
 
           <div className="mt-10 flex justify-center">
-            <img
-              src={meatHero}
-              alt="Fresh premium meat"
-              className="w-80 object-contain drop-shadow-[0_30px_50px_rgba(0,0,0,0.18)]"
-            />
+            <div className="rounded-[24px] bg-[#e32929] p-2 shadow-[0_12px_30px_rgba(0,0,0,0.16)]">
+              <img
+                src={meatHero}
+                alt="Fresh premium meat"
+                className="w-80 object-contain"
+              />
+            </div>
           </div>
 
           <div className="mt-auto rounded-[28px] bg-[#c41f1f] p-6 shadow-[0_12px_30px_rgba(0,0,0,0.16)]">
