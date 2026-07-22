@@ -215,7 +215,7 @@ export default function LoginPage({ onLogin, isSupabaseConfigured: hasSupabaseCo
               </div>
               <div className="flex flex-col items-center gap-2">
                 <HeartIcon />
-                <span>Hygenically Packed</span>
+                <span>Hygienically Packed</span>
               </div>
             </div>
           </div>
