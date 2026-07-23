@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import supabase, { isSupabaseConfigured } from './lib/supabase'
@@ -77,7 +78,19 @@ function App() {
   }
 
   return user ? (
-    <DashboardPage user={user} onLogout={handleSignOut} />
+    <Routes>
+      <Route path="/" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="dashboard" />} />
+      <Route path="/live-orders" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="live-orders" />} />
+      <Route path="/completed-orders" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="completed-orders" />} />
+      <Route path="/users" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="users" />} />
+      <Route path="/products" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="products" />} />
+      <Route path="/inventory" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="inventory" />} />
+      <Route path="/offers" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="offers" />} />
+      <Route path="/reports" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="reports" />} />
+      <Route path="/settings" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="settings" />} />
+      <Route path="/order/:id" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="order-details" />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   ) : (
     <LoginPage onLogin={() => setIsAuthLoading(false)} isSupabaseConfigured={isSupabaseConfigured} />
   )

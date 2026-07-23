@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import OrderDetailsPage from './OrderDetailsPage'
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -61,9 +63,11 @@ function LiciousLogo({ className = '', invert = false }) {
   )
 }
 
-export default function DashboardPage({ user, onLogout }) {
+export default function DashboardPage({ user, onLogout, activeTab }) {
+  const navigate = useNavigate()
+  const { id: routeOrderId } = useParams()
+
   // Navigation & UI States
-  const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard', 'live-orders', 'completed-orders', etc.
   const [isOrdersDropdownOpen, setIsOrdersDropdownOpen] = useState(true)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
@@ -80,58 +84,83 @@ export default function DashboardPage({ user, onLogout }) {
       customerName: 'Sanvi sri',
       phone: '9845672312',
       items: [
-        { name: 'Chicken curry cut (1 kg)', image: chickenCurryImg },
-        { name: 'Chicken seekh kebab (250 g)', image: chickenKebabImg }
+        { name: 'Chicken curry cut (1 kg)', image: chickenCurryImg, quantity: 1, price: 350 },
+        { name: 'Chicken seekh kebab (250 g)', image: chickenKebabImg, quantity: 1, price: 250 }
       ],
-      moreItemsCount: 1,
       price: 600,
       status: 'New',
+      date: '23 July, 2026 11:30 AM',
+      paymentMethod: 'UPI',
+      paymentStatus: 'Paid',
+      address: 'Flat 402, Block A, Prestige Shantiniketan, Whitefield, Bengaluru, Karnataka 560048',
+      deliveryInstructions: 'Ring the bell. Leave at the door if no answer.',
+      deliveryPartner: { name: 'Ramesh Kumar', phone: '+91 90123 45678', estTime: '20-25 mins', status: 'Assigned' }
     },
     {
       id: 'LICI123457',
       customerName: 'Snihitha',
       phone: '9743212394',
       items: [
-        { name: 'Rawas fillet (500 g )', image: rawasFilletImg },
-        { name: 'Praws medium (500 g)', image: prawnsMediumImg }
+        { name: 'Rawas fillet (500 g )', image: rawasFilletImg, quantity: 1, price: 749 },
+        { name: 'Prawns medium (500 g)', image: prawnsMediumImg, quantity: 2, price: 250 }
       ],
-      moreItemsCount: 1,
       price: 1249,
       status: 'Preparing',
+      date: '23 July, 2026 11:05 AM',
+      paymentMethod: 'Card',
+      paymentStatus: 'Paid',
+      address: 'Villa 15, Adarsh Palm Meadows, Varthur Road, Ramagondanahalli, Bengaluru, Karnataka 560066',
+      deliveryInstructions: 'Call upon arrival. Do not horn.',
+      deliveryPartner: { name: 'Suresh Raina', phone: '+91 91234 56789', estTime: '15-20 mins', status: 'At Store' }
     },
     {
       id: 'LICI123458',
       customerName: 'Pravin',
       phone: '7658456387',
       items: [
-        { name: 'Chicken tikka (500 g)', image: chickenTikkaImg },
-        { name: 'Chicken biriyani (1 kg)', image: chickenBiryaniImg }
+        { name: 'Chicken tikka (500 g)', image: chickenTikkaImg, quantity: 1, price: 380 },
+        { name: 'Chicken biriyani (1 kg)', image: chickenBiryaniImg, quantity: 1, price: 370 }
       ],
-      moreItemsCount: 1,
       price: 750,
       status: 'Preparing',
+      date: '23 July, 2026 10:45 AM',
+      paymentMethod: 'UPI',
+      paymentStatus: 'Paid',
+      address: 'Apt 102, Orchid Woods, Kothanur, Hennur Main Road, Bengaluru, Karnataka 560077',
+      deliveryInstructions: 'Drop it with the security guard.',
+      deliveryPartner: { name: 'Vikram Singh', phone: '+91 92345 67890', estTime: '25-30 mins', status: 'At Store' }
     },
     {
       id: 'LICI123459',
       customerName: 'Aarav Sharma',
       phone: '9812345678',
       items: [
-        { name: 'Rawas fillet (500 g )', image: rawasFilletImg }
+        { name: 'Rawas fillet (500 g )', image: rawasFilletImg, quantity: 1, price: 650 }
       ],
-      moreItemsCount: 0,
       price: 650,
       status: 'Delivered',
+      date: '22 July, 2026 08:15 PM',
+      paymentMethod: 'Cash on Delivery',
+      paymentStatus: 'Paid',
+      address: 'House 44, 4th Cross, Indiranagar 1st Stage, Bengaluru, Karnataka 560038',
+      deliveryInstructions: 'No contact delivery. Keep on the shoe rack.',
+      deliveryPartner: { name: 'Amit Patel', phone: '+91 93456 78901', estTime: 'Delivered', status: 'Delivered' }
     },
     {
       id: 'LICI123460',
       customerName: 'Kunal Verma',
       phone: '9123456789',
       items: [
-        { name: 'Chicken seekh kebab (250 g)', image: chickenKebabImg }
+        { name: 'Chicken seekh kebab (250 g)', image: chickenKebabImg, quantity: 1, price: 450 }
       ],
-      moreItemsCount: 0,
       price: 450,
       status: 'Delivered',
+      date: '22 July, 2026 07:30 PM',
+      paymentMethod: 'UPI',
+      paymentStatus: 'Paid',
+      address: 'Flat 204, Block C, Sobha Carnation, Sarjapur Outer Ring Road, Bellandur, Bengaluru, Karnataka 560103',
+      deliveryInstructions: '',
+      deliveryPartner: { name: 'Vijay Mallya', phone: '+91 94567 89012', estTime: 'Delivered', status: 'Delivered' }
     }
   ])
 
@@ -199,8 +228,8 @@ export default function DashboardPage({ user, onLogout }) {
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
       // 1. Tab filtering
-      if (activeTab === 'live-orders' && order.status === 'Delivered') return false
-      if (activeTab === 'completed-orders' && order.status !== 'Delivered') return false
+      if (activeTab === 'live-orders' && (order.status === 'Delivered' || order.status === 'Cancelled')) return false
+      if (activeTab === 'completed-orders' && (order.status !== 'Delivered' && order.status !== 'Cancelled')) return false
 
       // 2. Search query filtering
       if (searchQuery.trim() === '') return true
@@ -269,7 +298,7 @@ export default function DashboardPage({ user, onLogout }) {
                   <div className="pl-12 space-y-1 animate-fade-in-up">
                     <button
                       onClick={() => {
-                        setActiveTab('live-orders')
+                        navigate('/live-orders')
                         setIsMobileSidebarOpen(false)
                       }}
                       className={`w-full flex items-center gap-2 py-2 px-3 text-xs rounded-lg font-medium transition-all ${
@@ -283,7 +312,7 @@ export default function DashboardPage({ user, onLogout }) {
                     </button>
                     <button
                       onClick={() => {
-                        setActiveTab('completed-orders')
+                        navigate('/completed-orders')
                         setIsMobileSidebarOpen(false)
                       }}
                       className={`w-full flex items-center gap-2 py-2 px-3 text-xs rounded-lg font-medium transition-all ${
@@ -306,7 +335,7 @@ export default function DashboardPage({ user, onLogout }) {
             <button
               key={item.id}
               onClick={() => {
-                setActiveTab(item.id)
+                navigate(item.id === 'dashboard' ? '/' : `/${item.id}`)
                 setIsMobileSidebarOpen(false)
               }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium ${
@@ -338,13 +367,13 @@ export default function DashboardPage({ user, onLogout }) {
   return (
     <div className="flex h-screen w-screen bg-gray-50/30 overflow-hidden font-[Inter,sans-serif] text-gray-800">
       {/* ── LEFT DESKTOP SIDEBAR ── */}
-      <aside className="hidden lg:flex w-64 flex-col flex-shrink-0 bg-white border-r border-gray-150">
+      <aside className="hidden lg:flex w-64 flex-col flex-shrink-0 bg-white border-r border-gray-150 print:hidden">
         {renderSidebarContent()}
       </aside>
 
       {/* ── MOBILE SIDEBAR DRAWER ── */}
       {isMobileSidebarOpen && (
-        <div className="fixed inset-0 z-50 flex lg:hidden">
+        <div className="fixed inset-0 z-50 flex lg:hidden print:hidden">
           {/* Overlay backdrop */}
           <div
             className="fixed inset-0 bg-black/40 backdrop-blur-sm"
@@ -361,7 +390,7 @@ export default function DashboardPage({ user, onLogout }) {
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         
         {/* ── TOP HEADER BAR ── */}
-        <header className="h-20 bg-white border-b border-gray-150 px-6 flex items-center justify-between flex-shrink-0">
+        <header className="h-20 bg-white border-b border-gray-150 px-6 flex items-center justify-between flex-shrink-0 print:hidden">
           <div className="flex items-center gap-4">
             <button
               className="lg:hidden text-gray-600 hover:text-gray-900 transition-colors p-1.5 rounded-lg hover:bg-gray-50"
@@ -424,7 +453,7 @@ export default function DashboardPage({ user, onLogout }) {
                     <div className="h-px bg-gray-100 my-1" />
                     <button
                       onClick={() => {
-                        setActiveTab('settings')
+                        navigate('/settings')
                         setIsProfileOpen(false)
                       }}
                       className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -448,7 +477,7 @@ export default function DashboardPage({ user, onLogout }) {
         </header>
 
         {/* Search bar for Mobile screens */}
-        <div className="md:hidden p-4 bg-white border-b border-gray-150 flex-shrink-0">
+        <div className="md:hidden p-4 bg-white border-b border-gray-150 flex-shrink-0 print:hidden">
           <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2">
             <Search className="w-4 h-4 text-gray-400 mr-2.5 flex-shrink-0" />
             <input
@@ -462,7 +491,7 @@ export default function DashboardPage({ user, onLogout }) {
         </div>
 
         {/* ── SCROLLABLE BODY WORKSPACE ── */}
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6 print:p-0 print:overflow-visible">
 
           {/* ──── VIEW: DASHBOARD TAB ──── */}
           {activeTab === 'dashboard' && (
@@ -781,7 +810,8 @@ export default function DashboardPage({ user, onLogout }) {
                   {filteredOrders.slice(0, 3).map((order) => (
                     <div
                       key={order.id}
-                      className="bg-white border border-gray-150 rounded-2xl p-4.5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm hover:border-[#e32929] transition-all duration-300 relative"
+                      onClick={() => navigate(`/order/${order.id}`)}
+                      className="bg-white border border-gray-150 rounded-2xl p-4.5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm hover:border-[#e32929] hover:shadow-md transition-all duration-300 relative cursor-pointer"
                     >
                       {/* Left: Customer Info */}
                       <div className="flex items-center gap-3.5 min-w-[200px]">
@@ -797,7 +827,7 @@ export default function DashboardPage({ user, onLogout }) {
                       {/* Middle: Items & Photos */}
                       <div className="flex-1 flex items-center gap-4 border-l-0 md:border-l md:border-gray-100 md:pl-6 min-w-0">
                         <div className="flex -space-x-2.5 flex-shrink-0">
-                          {order.items.map((item, index) => (
+                          {order.items.slice(0, 2).map((item, index) => (
                             <img
                               key={index}
                               src={item.image}
@@ -811,9 +841,9 @@ export default function DashboardPage({ user, onLogout }) {
                           {order.items[1] && (
                             <p className="text-xs font-bold text-gray-700 truncate mt-0.5">{order.items[1].name}</p>
                           )}
-                          {order.moreItemsCount > 0 && (
+                          {order.items.length > 2 && (
                             <span className="text-[10px] text-[#e32929] font-bold block mt-0.5">
-                              +{order.moreItemsCount} more
+                              +{order.items.length - 2} more
                             </span>
                           )}
                         </div>
@@ -834,16 +864,23 @@ export default function DashboardPage({ user, onLogout }) {
                               ? 'bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-100'
                               : order.status === 'Preparing'
                               ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                              : order.status === 'Ready'
+                              ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                              : order.status === 'Cancelled'
+                              ? 'bg-red-50 text-red-600 border border-red-100'
                               : 'bg-green-50 text-green-600 border border-green-100'
                           }`}
                         >
-                          {order.status}
+                          {order.status === 'Ready' ? 'Ready for Pickup' : order.status}
                         </span>
 
                         {/* Interactive dots context menu */}
                         <div className="relative">
                           <button
-                            onClick={() => setActiveOrderActionId(activeOrderActionId === order.id ? null : order.id)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setActiveOrderActionId(activeOrderActionId === order.id ? null : order.id)
+                            }}
                             className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                           >
                             <MoreVertical className="w-5 h-5" />
@@ -855,25 +892,54 @@ export default function DashboardPage({ user, onLogout }) {
                               <div className="absolute right-0 bottom-full md:bottom-auto md:top-full mt-1.5 w-44 bg-white border border-gray-150 rounded-xl shadow-xl py-1.5 z-20 animate-fade-in-up">
                                 <p className="text-[9px] uppercase tracking-wider text-gray-400 font-extrabold px-3 py-1 border-b border-gray-50 mb-1">Update Status</p>
                                 <button
-                                  onClick={() => handleUpdateStatus(order.id, 'New')}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleUpdateStatus(order.id, 'New')
+                                  }}
                                   className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-fuchsia-600 hover:bg-fuchsia-50 font-bold transition-all"
                                 >
                                   <CircleDot className="w-3.5 h-3.5" />
                                   <span>Mark as New</span>
                                 </button>
                                 <button
-                                  onClick={() => handleUpdateStatus(order.id, 'Preparing')}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleUpdateStatus(order.id, 'Preparing')
+                                  }}
                                   className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-amber-600 hover:bg-amber-50 font-bold transition-all"
                                 >
                                   <Clock className="w-3.5 h-3.5" />
                                   <span>Mark as Preparing</span>
                                 </button>
                                 <button
-                                  onClick={() => handleUpdateStatus(order.id, 'Delivered')}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleUpdateStatus(order.id, 'Ready')
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-blue-600 hover:bg-blue-50 font-bold transition-all"
+                                >
+                                  <Clock className="w-3.5 h-3.5" />
+                                  <span>Mark as Ready</span>
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleUpdateStatus(order.id, 'Delivered')
+                                  }}
                                   className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-green-600 hover:bg-green-50 font-bold transition-all"
                                 >
                                   <Truck className="w-3.5 h-3.5" />
                                   <span>Mark as Delivered</span>
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleUpdateStatus(order.id, 'Cancelled')
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 font-bold transition-all"
+                                >
+                                  <XCircle className="w-3.5 h-3.5" />
+                                  <span>Cancel Order</span>
                                 </button>
                               </div>
                             </>
@@ -911,7 +977,8 @@ export default function DashboardPage({ user, onLogout }) {
                 {filteredOrders.map(order => (
                   <div
                     key={order.id}
-                    className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+                    onClick={() => navigate(`/order/${order.id}`)}
+                    className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-[#e32929] transition-all duration-300 flex flex-col justify-between cursor-pointer"
                   >
                     <div>
                       {/* Header info */}
@@ -923,10 +990,14 @@ export default function DashboardPage({ user, onLogout }) {
                               ? 'bg-fuchsia-50 text-fuchsia-600'
                               : order.status === 'Preparing'
                               ? 'bg-amber-50 text-amber-600'
+                              : order.status === 'Ready'
+                              ? 'bg-blue-50 text-blue-600'
+                              : order.status === 'Cancelled'
+                              ? 'bg-red-50 text-red-600'
                               : 'bg-green-50 text-green-600'
                           }`}
                         >
-                          {order.status}
+                          {order.status === 'Ready' ? 'Ready' : order.status}
                         </span>
                       </div>
 
@@ -943,7 +1014,7 @@ export default function DashboardPage({ user, onLogout }) {
 
                       {/* Items lists */}
                       <div className="space-y-2 mb-5">
-                        {order.items.map((item, idx) => (
+                        {order.items.slice(0, 2).map((item, idx) => (
                           <div key={idx} className="flex items-center gap-2.5 text-xs text-gray-600">
                             <img
                               src={item.image}
@@ -953,9 +1024,9 @@ export default function DashboardPage({ user, onLogout }) {
                             <span className="font-semibold line-clamp-1">{item.name}</span>
                           </div>
                         ))}
-                        {order.moreItemsCount > 0 && (
+                        {order.items.length > 2 && (
                           <p className="text-[10px] text-[#e32929] font-bold pl-10">
-                            +{order.moreItemsCount} more items in this order
+                            +{order.items.length - 2} more items in this order
                           </p>
                         )}
                       </div>
@@ -971,7 +1042,10 @@ export default function DashboardPage({ user, onLogout }) {
                       {/* Dropdown status update selector */}
                       <div className="relative">
                         <button
-                          onClick={() => setActiveOrderActionId(activeOrderActionId === order.id ? null : order.id)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setActiveOrderActionId(activeOrderActionId === order.id ? null : order.id)
+                          }}
                           className="flex items-center gap-1 text-xs font-bold text-[#e32929] hover:bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 transition-all"
                         >
                           <span>Actions</span>
@@ -984,25 +1058,54 @@ export default function DashboardPage({ user, onLogout }) {
                             <div className="absolute right-0 bottom-full mt-1.5 w-44 bg-white border border-gray-150 rounded-xl shadow-xl py-1.5 z-20 animate-fade-in-up">
                               <p className="text-[9px] uppercase tracking-wider text-gray-400 font-extrabold px-3 py-1 border-b border-gray-50 mb-1">Set Status</p>
                               <button
-                                onClick={() => handleUpdateStatus(order.id, 'New')}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleUpdateStatus(order.id, 'New')
+                                }}
                                 className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-fuchsia-600 hover:bg-fuchsia-50 font-bold transition-all"
                               >
                                 <CircleDot className="w-3.5 h-3.5" />
                                 <span>Mark as New</span>
                               </button>
                               <button
-                                onClick={() => handleUpdateStatus(order.id, 'Preparing')}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleUpdateStatus(order.id, 'Preparing')
+                                }}
                                 className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-amber-600 hover:bg-amber-50 font-bold transition-all"
                               >
                                 <Clock className="w-3.5 h-3.5" />
                                 <span>Mark as Preparing</span>
                               </button>
                               <button
-                                onClick={() => handleUpdateStatus(order.id, 'Delivered')}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleUpdateStatus(order.id, 'Ready')
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-blue-600 hover:bg-blue-50 font-bold transition-all"
+                              >
+                                <Clock className="w-3.5 h-3.5" />
+                                <span>Mark as Ready</span>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleUpdateStatus(order.id, 'Delivered')
+                                }}
                                 className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-green-600 hover:bg-green-50 font-bold transition-all"
                               >
                                 <Truck className="w-3.5 h-3.5" />
                                 <span>Mark as Delivered</span>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleUpdateStatus(order.id, 'Cancelled')
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 font-bold transition-all"
+                              >
+                                <XCircle className="w-3.5 h-3.5" />
+                                <span>Cancel Order</span>
                               </button>
                             </div>
                           </>
@@ -1021,8 +1124,17 @@ export default function DashboardPage({ user, onLogout }) {
             </div>
           )}
 
+          {/* ──── VIEW: ORDER DETAILS TAB ──── */}
+          {activeTab === 'order-details' && (
+            <OrderDetailsPage
+              orderId={routeOrderId}
+              orders={orders}
+              onUpdateStatus={handleUpdateStatus}
+            />
+          )}
+
           {/* ──── OTHER NAVIGATION TABS (PLACEHOLDER PAGES) ──── */}
-          {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && (
+          {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && activeTab !== 'order-details' && (
             <div className="bg-white border border-gray-150 rounded-2xl p-12 text-center shadow-sm animate-fade-in-up space-y-4 max-w-lg mx-auto mt-10">
               <div className="w-16 h-16 bg-red-50 text-[#e32929] rounded-full flex items-center justify-center mx-auto">
                 {activeTab === 'users' && <Users className="w-8 h-8" />}
