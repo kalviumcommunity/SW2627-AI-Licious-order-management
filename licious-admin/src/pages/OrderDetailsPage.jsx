@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   Printer,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react'
 
 export default function OrderDetailsPage({ orderId, orders, onUpdateStatus }) {
+  const navigate = useNavigate()
   // Find current order
   const order = useMemo(() => {
     return orders.find(o => o.id === orderId)
@@ -67,12 +69,9 @@ export default function OrderDetailsPage({ orderId, orders, onUpdateStatus }) {
   const handleBack = () => {
     // If order is delivered or cancelled, go to completed-orders tab
     if (order.status === 'Delivered' || order.status === 'Cancelled') {
-      window.history.pushState({}, '', '/completed-orders')
-      // Dispatch popstate to update App router
-      window.dispatchEvent(new PopStateEvent('popstate'))
+      navigate('/completed-orders')
     } else {
-      window.history.pushState({}, '', '/live-orders')
-      window.dispatchEvent(new PopStateEvent('popstate'))
+      navigate('/live-orders')
     }
   }
 

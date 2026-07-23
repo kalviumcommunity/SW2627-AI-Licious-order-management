@@ -66,9 +66,13 @@ function LiciousLogo({ className = '', invert = false }) {
   )
 }
 
-export default function DashboardPage({ user, onLogout, initialActiveTab = 'dashboard' }) {
+export default function DashboardPage({ user, onLogout, activeTab: propActiveTab, initialActiveTab = 'dashboard' }) {
+  const navigate = useNavigate()
+  const { id: routeOrderId } = useParams()
+
+  const activeTab = propActiveTab || initialActiveTab
+
   // Navigation & UI States
-  const [activeTab, setActiveTab] = useState(initialActiveTab) // 'dashboard', 'live-orders', 'completed-orders', etc.
   const [isOrdersDropdownOpen, setIsOrdersDropdownOpen] = useState(true)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
@@ -674,7 +678,7 @@ export default function DashboardPage({ user, onLogout, initialActiveTab = 'dash
             {/* Back button — shown on Inventory tab per design reference */}
             {activeTab === 'inventory' && (
               <button
-                onClick={() => setActiveTab('dashboard')}
+                onClick={() => navigate('/')}
                 className="p-2.5 text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-full border border-gray-200 transition-all"
                 aria-label="Back to dashboard"
               >
@@ -1058,7 +1062,7 @@ export default function DashboardPage({ user, onLogout, initialActiveTab = 'dash
                 <div className="flex items-center justify-between">
                   <h4 className="font-bold text-gray-900 text-base">Recent Orders</h4>
                   <button
-                    onClick={() => setActiveTab('live-orders')}
+                    onClick={() => navigate('/live-orders')}
                     className="text-xs font-semibold text-[#e32929] hover:underline"
                   >
                     View All Orders
@@ -1384,6 +1388,15 @@ export default function DashboardPage({ user, onLogout, initialActiveTab = 'dash
             </div>
           )}
 
+          {/* ──── VIEW: ORDER DETAILS TAB ──── */}
+          {activeTab === 'order-details' && (
+            <OrderDetailsPage
+              orderId={routeOrderId}
+              orders={orders}
+              onUpdateStatus={handleUpdateStatus}
+            />
+          )}
+
           {/* ──── VIEW: INVENTORY TAB ──── */}
           {activeTab === 'inventory' && (
             <div className="space-y-6 animate-fade-in-up">
@@ -1609,7 +1622,7 @@ export default function DashboardPage({ user, onLogout, initialActiveTab = 'dash
           )}
 
           {/* ──── OTHER NAVIGATION TABS (PLACEHOLDER PAGES) ──── */}
-          {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && activeTab !== 'inventory' && (
+          {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && activeTab !== 'inventory' && activeTab !== 'order-details' && (
             <div className="bg-white border border-gray-150 rounded-2xl p-12 text-center shadow-sm animate-fade-in-up space-y-4 max-w-lg mx-auto mt-10">
               <div className="w-16 h-16 bg-red-50 text-[#e32929] rounded-full flex items-center justify-center mx-auto">
                 {activeTab === 'users' && <Users className="w-8 h-8" />}
@@ -1625,7 +1638,7 @@ export default function DashboardPage({ user, onLogout, initialActiveTab = 'dash
                 </p>
               </div>
               <button
-                onClick={() => setActiveTab('dashboard')}
+                onClick={() => navigate('/')}
                 className="bg-[#e32929] hover:bg-[#c41f1f] text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md transition-all inline-block"
               >
                 Back to Dashboard
