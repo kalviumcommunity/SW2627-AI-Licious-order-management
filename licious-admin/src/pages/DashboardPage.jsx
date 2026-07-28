@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import OrderDetailsPage from './OrderDetailsPage'
+import SettingsSection from './SettingsSection'
+
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -2186,6 +2188,7 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
               </button>
             </div>
           )}
+
 
         </div>
       </main>
