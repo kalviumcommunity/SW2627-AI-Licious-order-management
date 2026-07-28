@@ -23,7 +23,12 @@ import {
   MoreVertical,
   Edit2,
   Trash2,
-  ArrowLeft
+  ArrowLeft,
+  Download,
+  Calendar,
+  TrendingUp,
+  TrendingDown,
+  Check
 } from 'lucide-react'
 import './DashboardPage.css'
 
@@ -78,6 +83,7 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeOrderActionId, setActiveOrderActionId] = useState(null)
+
 
   // Inventory States
   const [inventory, setInventory] = useState([
@@ -446,6 +452,148 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
       rawRevenue: revenueSum
     }
   }, [orders])
+
+  // Reports States
+  const [reportRange, setReportRange] = useState('Last 7 Days')
+  const [customStartDate, setCustomStartDate] = useState('')
+  const [customEndDate, setCustomEndDate] = useState('')
+  const [hoveredReportSalesPoint, setHoveredReportSalesPoint] = useState(null)
+  const [isExportingCsv, setIsExportingCsv] = useState(false)
+  const [isExportingPdf, setIsExportingPdf] = useState(false)
+  const [csvExportSuccess, setCsvExportSuccess] = useState(false)
+  const [pdfExportSuccess, setPdfExportSuccess] = useState(false)
+
+  // Dynamically generate data based on reportRange
+  const reportData = useMemo(() => {
+    let salesPoints = []
+    let totalRevenue = 0
+    let totalOrdersCount = 0
+    let aov = 0
+    let completionRate = 94.7
+    let categorySales = [
+      { name: 'Chicken', sales: 185000, percentage: 45, color: '#e32929' },
+      { name: 'Fish & Seafood', sales: 102800, percentage: 25, color: '#06b6d4' },
+      { name: 'Kebabs', sales: 82240, percentage: 20, color: '#f59e0b' },
+      { name: 'Ready to Cook', sales: 41120, percentage: 10, color: '#8b5cf6' }
+    ]
+    let topProducts = [
+      { rank: 1, name: 'Chicken Curry Cut (1 kg)', category: 'Chicken', price: 450, sold: 184, revenue: 82800, stock: 'In Stock' },
+      { rank: 2, name: 'Chicken Biryani (1 kg)', category: 'Ready to Cook', price: 370, sold: 142, revenue: 52540, stock: 'In Stock' },
+      { rank: 3, name: 'Rawas Fillet (500 g)', category: 'Fish & Seafood', price: 500, sold: 98, revenue: 49000, stock: 'Out of Stock' },
+      { rank: 4, name: 'Prawns Medium (500 g)', category: 'Fish & Seafood', price: 250, sold: 156, revenue: 39000, stock: 'In Stock' },
+      { rank: 5, name: 'Chicken Seekh Kebab (250 g)', category: 'Kebabs', price: 600, sold: 62, revenue: 37200, stock: 'Low Stock' }
+    ]
+
+    const currentOrdersDeliveredRevenue = orders
+      .filter(o => o.status === 'Delivered')
+      .reduce((sum, o) => sum + o.price, 0)
+    const currentOrdersCount = orders.length
+
+    if (reportRange === 'Today') {
+      salesPoints = [
+        { date: '09:00 AM', sales: 12000, cx: 40, cy: 160 },
+        { date: '12:00 PM', sales: 28000, cx: 150, cy: 110 },
+        { date: '03:00 PM', sales: 15000, cx: 260, cy: 150 },
+        { date: '06:00 PM', sales: 35000, cx: 370, cy: 80 },
+        { date: '09:00 PM', sales: 45000, cx: 460, cy: 50 }
+      ]
+      totalRevenue = currentOrdersDeliveredRevenue + 135000
+      totalOrdersCount = currentOrdersCount + 124
+      aov = Math.round(totalRevenue / totalOrdersCount)
+      completionRate = 96.8
+      categorySales = [
+        { name: 'Chicken', sales: 74250, percentage: 55, color: '#e32929' },
+        { name: 'Fish & Seafood', sales: 27000, percentage: 20, color: '#06b6d4' },
+        { name: 'Kebabs', sales: 20250, percentage: 15, color: '#f59e0b' },
+        { name: 'Ready to Cook', sales: 13500, percentage: 10, color: '#8b5cf6' }
+      ]
+    } else if (reportRange === 'Last 30 Days') {
+      salesPoints = [
+        { date: 'Week 1', sales: 180000, cx: 40, cy: 150 },
+        { date: 'Week 2', sales: 240000, cx: 180, cy: 110 },
+        { date: 'Week 3', sales: 310000, cx: 320, cy: 60 },
+        { date: 'Week 4', sales: 285000, cx: 460, cy: 80 }
+      ]
+      totalRevenue = currentOrdersDeliveredRevenue + 1015000
+      totalOrdersCount = currentOrdersCount + 1340
+      aov = Math.round(totalRevenue / totalOrdersCount)
+      completionRate = 93.4
+      categorySales = [
+        { name: 'Chicken', sales: 456750, percentage: 45, color: '#e32929' },
+        { name: 'Fish & Seafood', sales: 253750, percentage: 25, color: '#06b6d4' },
+        { name: 'Kebabs', sales: 203000, percentage: 20, color: '#f59e0b' },
+        { name: 'Ready to Cook', sales: 101500, percentage: 10, color: '#8b5cf6' }
+      ]
+    } else if (reportRange === 'This Year') {
+      salesPoints = [
+        { date: 'Jan-Feb', sales: 850000, cx: 40, cy: 160 },
+        { date: 'Mar-Apr', sales: 1200000, cx: 150, cy: 110 },
+        { date: 'May-Jun', sales: 1450000, cx: 260, cy: 80 },
+        { date: 'Jul-Aug', sales: 1680000, cx: 370, cy: 50 },
+        { date: 'Sep-Oct', sales: 1350000, cx: 460, cy: 90 }
+      ]
+      totalRevenue = currentOrdersDeliveredRevenue + 6530000
+      totalOrdersCount = currentOrdersCount + 8920
+      aov = Math.round(totalRevenue / totalOrdersCount)
+      completionRate = 95.1
+      categorySales = [
+        { name: 'Chicken', sales: 2938500, percentage: 45, color: '#e32929' },
+        { name: 'Fish & Seafood', sales: 1632500, percentage: 25, color: '#06b6d4' },
+        { name: 'Kebabs', sales: 1306000, percentage: 20, color: '#f59e0b' },
+        { name: 'Ready to Cook', sales: 653000, percentage: 10, color: '#8b5cf6' }
+      ]
+    } else {
+      salesPoints = [
+        { date: '22 Jul', sales: 145000, cx: 40, cy: 150 },
+        { date: '23 Jul', sales: 162000, cx: 110, cy: 130 },
+        { date: '24 Jul', sales: 128000, cx: 180, cy: 160 },
+        { date: '25 Jul', sales: 185000, cx: 250, cy: 110 },
+        { date: '26 Jul', sales: 195000, cx: 320, cy: 100 },
+        { date: '27 Jul', sales: 210000, cx: 390, cy: 80 },
+        { date: '28 Jul', sales: 175000, cx: 460, cy: 120 }
+      ]
+      totalRevenue = currentOrdersDeliveredRevenue + 1200000
+      totalOrdersCount = currentOrdersCount + 1580
+      aov = Math.round(totalRevenue / totalOrdersCount)
+      completionRate = 94.8
+      categorySales = [
+        { name: 'Chicken', sales: 540000, percentage: 45, color: '#e32929' },
+        { name: 'Fish & Seafood', sales: 300000, percentage: 25, color: '#06b6d4' },
+        { name: 'Kebabs', sales: 240000, percentage: 20, color: '#f59e0b' },
+        { name: 'Ready to Cook', sales: 120000, percentage: 10, color: '#8b5cf6' }
+      ]
+    }
+
+    return {
+      salesPoints,
+      totalRevenue,
+      totalOrdersCount,
+      aov,
+      completionRate,
+      categorySales,
+      topProducts
+    }
+  }, [reportRange, orders])
+
+  const handleExportCsv = () => {
+    setIsExportingCsv(true)
+    setCsvExportSuccess(false)
+    setTimeout(() => {
+      setIsExportingCsv(false)
+      setCsvExportSuccess(true)
+      setTimeout(() => setCsvExportSuccess(false), 3000)
+    }, 1500)
+  }
+
+  const handleExportPdf = () => {
+    setIsExportingPdf(true)
+    setPdfExportSuccess(false)
+    setTimeout(() => {
+      setIsExportingPdf(false)
+      setPdfExportSuccess(true)
+      setTimeout(() => setPdfExportSuccess(false), 3000)
+    }, 1500)
+  }
 
   // Chart Data Setup
   const salesData = [
@@ -1621,8 +1769,401 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
             </div>
           )}
 
+          {/* ──── VIEW: REPORTS TAB ──── */}
+          {activeTab === 'reports' && (
+            <div className="space-y-6 animate-fade-in-up">
+              
+              {/* Reports Dashboard Header / Controls */}
+              <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Performance & Analytics</h2>
+                  <p className="text-xs text-gray-400 font-semibold mt-1">
+                    Real-time sales charts, orders reports, and business insights.
+                  </p>
+                </div>
+                
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Date range picker dropdown */}
+                  <div className="relative flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 focus-within:border-[#e32929] transition-all">
+                    <Calendar className="w-4 h-4 text-gray-400 mr-2" />
+                    <select
+                      value={reportRange}
+                      onChange={(e) => setReportRange(e.target.value)}
+                      className="text-xs font-semibold text-gray-600 bg-transparent outline-none cursor-pointer pr-4"
+                    >
+                      <option>Today</option>
+                      <option>Last 7 Days</option>
+                      <option>Last 30 Days</option>
+                      <option>This Year</option>
+                      <option>Custom Range</option>
+                    </select>
+                  </div>
+
+                  {reportRange === 'Custom Range' && (
+                    <div className="flex items-center gap-2 animate-fade-in">
+                      <input
+                        type="date"
+                        value={customStartDate}
+                        onChange={(e) => setCustomStartDate(e.target.value)}
+                        className="text-xs font-semibold text-gray-600 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 outline-none focus:border-[#e32929]"
+                      />
+                      <span className="text-xs text-gray-400 font-semibold">to</span>
+                      <input
+                        type="date"
+                        value={customEndDate}
+                        onChange={(e) => setCustomEndDate(e.target.value)}
+                        className="text-xs font-semibold text-gray-600 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 outline-none focus:border-[#e32929]"
+                      />
+                    </div>
+                  )}
+
+                  {/* Export Options */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleExportCsv}
+                      disabled={isExportingCsv}
+                      className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border border-gray-200 shadow-sm transition-all duration-200 cursor-pointer ${
+                        csvExportSuccess
+                          ? 'bg-green-50 border-green-200 text-green-600'
+                          : 'bg-white hover:bg-gray-50 text-gray-600'
+                      }`}
+                    >
+                      {isExportingCsv ? (
+                        <div className="w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      ) : csvExportSuccess ? (
+                        <Check className="w-3.5 h-3.5 text-green-500" />
+                      ) : (
+                        <Download className="w-3.5 h-3.5" />
+                      )}
+                      <span>{csvExportSuccess ? 'Exported!' : 'Export CSV'}</span>
+                    </button>
+
+                    <button
+                      onClick={handleExportPdf}
+                      disabled={isExportingPdf}
+                      className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border border-gray-200 shadow-sm transition-all duration-200 cursor-pointer ${
+                        pdfExportSuccess
+                          ? 'bg-green-50 border-green-200 text-green-600'
+                          : 'bg-white hover:bg-gray-50 text-gray-600'
+                      }`}
+                    >
+                      {isExportingPdf ? (
+                        <div className="w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      ) : pdfExportSuccess ? (
+                        <Check className="w-3.5 h-3.5 text-green-500" />
+                      ) : (
+                        <Download className="w-3.5 h-3.5" />
+                      )}
+                      <span>{pdfExportSuccess ? 'PDF Downloaded!' : 'Export PDF'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* KPI Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* 1. Revenue Card */}
+                <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm flex items-center gap-4 hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-[#e32929]/5 rounded-bl-full translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform" />
+                  <div className="w-12 h-12 rounded-xl bg-red-50 text-[#e32929] flex items-center justify-center flex-shrink-0">
+                    <span className="text-lg font-bold">₹</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Total Sales</span>
+                    <h3 className="text-xl font-bold text-gray-800 mt-0.5">
+                      ₹ {reportData.totalRevenue.toLocaleString('en-IN')}
+                    </h3>
+                    <p className="text-green-500 text-[10px] font-bold mt-1 flex items-center gap-0.5">
+                      <TrendingUp className="w-3 h-3" /> +12.4% <span className="text-gray-400 font-normal">vs prev period</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2. Total Orders Card */}
+                <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm flex items-center gap-4 hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-bl-full translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform" />
+                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0">
+                    <ShoppingBag className="w-5.5 h-5.5" />
+                  </div>
+                  <div>
+                    <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Total Orders</span>
+                    <h3 className="text-xl font-bold text-gray-800 mt-0.5">
+                      {reportData.totalOrdersCount.toLocaleString('en-IN')}
+                    </h3>
+                    <p className="text-green-500 text-[10px] font-bold mt-1 flex items-center gap-0.5">
+                      <TrendingUp className="w-3 h-3" /> +8.6% <span className="text-gray-400 font-normal">vs prev period</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3. AOV Card */}
+                <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm flex items-center gap-4 hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-bl-full translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform" />
+                  <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center flex-shrink-0">
+                    <TrendingUp className="w-5.5 h-5.5" />
+                  </div>
+                  <div>
+                    <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Avg Order Value</span>
+                    <h3 className="text-xl font-bold text-gray-800 mt-0.5">
+                      ₹ {reportData.aov.toLocaleString('en-IN')}
+                    </h3>
+                    <p className="text-green-500 text-[10px] font-bold mt-1 flex items-center gap-0.5">
+                      <TrendingUp className="w-3 h-3" /> +3.5% <span className="text-gray-400 font-normal">vs prev period</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* 4. Completion Rate Card */}
+                <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300 relative overflow-hidden group min-h-[92px]">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-green-50 text-green-500 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-5.5 h-5.5" />
+                    </div>
+                    <div>
+                      <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Delivery Success Rate</span>
+                      <h3 className="text-xl font-bold text-gray-800 mt-0.5">{reportData.completionRate}%</h3>
+                    </div>
+                  </div>
+                  <div className="w-full bg-gray-100 h-1.5 rounded-full mt-3 overflow-hidden">
+                    <div
+                      className="bg-green-500 h-full rounded-full transition-all duration-500"
+                      style={{ width: `${reportData.completionRate}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Charts Section */}
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                {/* Left: Revenue Trend Chart (SVG Line Chart) */}
+                <div className="xl:col-span-2 bg-white border border-gray-150 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300 min-h-[360px]">
+                  <div className="flex items-center justify-between border-b border-gray-50 pb-4 mb-4">
+                    <div>
+                      <h4 className="font-bold text-gray-800 text-sm">Revenue Sales Trend</h4>
+                      <p className="text-[10px] text-gray-400 font-semibold mt-0.5">Visualizing performance indicators</p>
+                    </div>
+                    <span className="text-[10px] font-extrabold text-[#e32929] bg-red-50 px-2 py-0.5 rounded-lg border border-red-100">
+                      {reportRange}
+                    </span>
+                  </div>
+
+                  <div className="relative flex-1 flex items-center justify-center">
+                    <svg className="w-full h-48 overflow-visible" viewBox="0 0 500 200">
+                      {/* Grid Lines */}
+                      <line x1="40" y1="30" x2="480" y2="30" stroke="#f8fafc" strokeWidth="1" />
+                      <line x1="40" y1="70" x2="480" y2="70" stroke="#f8fafc" strokeWidth="1" />
+                      <line x1="40" y1="110" x2="480" y2="110" stroke="#f8fafc" strokeWidth="1" />
+                      <line x1="40" y1="150" x2="480" y2="150" stroke="#f8fafc" strokeWidth="1" />
+                      <line x1="40" y1="180" x2="480" y2="180" stroke="#e2e8f0" strokeWidth="1.5" />
+
+                      {/* Y Axis Labels */}
+                      <text x="30" y="34" className="text-[9px] font-semibold text-gray-400" textAnchor="end">₹3,00,000</text>
+                      <text x="30" y="74" className="text-[9px] font-semibold text-gray-400" textAnchor="end">₹2,00,000</text>
+                      <text x="30" y="114" className="text-[9px] font-semibold text-gray-400" textAnchor="end">₹1,00,000</text>
+                      <text x="30" y="154" className="text-[9px] font-semibold text-gray-400" textAnchor="end">₹50,000</text>
+                      <text x="30" y="184" className="text-[9px] font-semibold text-gray-400" textAnchor="end">0</text>
+
+                      {/* Area Fill Path builder based on dynamic range */}
+                      <defs>
+                        <linearGradient id="reportChartGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#e32929" stopOpacity="0.2" />
+                          <stop offset="100%" stopColor="#e32929" stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
+
+                      {/* Dynamic SVG Area & Path builder */}
+                      {(() => {
+                        const pts = reportData.salesPoints
+                        if (pts.length === 0) return null
+                        
+                        let pathD = `M ${pts[0].cx} ${pts[0].cy}`
+                        for (let i = 1; i < pts.length; i++) {
+                          const prev = pts[i - 1]
+                          const curr = pts[i]
+                          const cp1x = prev.cx + (curr.cx - prev.cx) / 2
+                          const cp1y = prev.cy
+                          const cp2x = prev.cx + (curr.cx - prev.cx) / 2
+                          const cp2y = curr.cy
+                          pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${curr.cx} ${curr.cy}`
+                        }
+                        
+                        const areaD = `${pathD} L ${pts[pts.length - 1].cx} 180 L ${pts[0].cx} 180 Z`
+                        
+                        return (
+                          <>
+                            <path d={areaD} fill="url(#reportChartGradient)" />
+                            <path d={pathD} fill="none" stroke="#e32929" strokeWidth="3" strokeLinecap="round" className="animate-chart-path" />
+                          </>
+                        )
+                      })()}
+
+                      {/* Data Point Markers */}
+                      {reportData.salesPoints.map((pt, idx) => (
+                        <g key={idx}>
+                          <circle
+                            cx={pt.cx}
+                            cy={pt.cy}
+                            r="4.5"
+                            className="fill-white stroke-[#e32929] stroke-[2.5] cursor-pointer hover:r-6.5 transition-all"
+                            onMouseEnter={() => setHoveredReportSalesPoint({ ...pt, idx })}
+                            onMouseLeave={() => setHoveredReportSalesPoint(null)}
+                          />
+                          <text
+                            x={pt.cx}
+                            y="195"
+                            className="text-[9px] font-semibold text-gray-400"
+                            textAnchor="middle"
+                          >
+                            {pt.date}
+                          </text>
+                        </g>
+                      ))}
+                    </svg>
+
+                    {/* Interactive Tooltip popup */}
+                    {hoveredReportSalesPoint && (
+                      <div
+                        className="absolute bg-gray-900 text-white text-xs rounded-lg px-2.5 py-1.5 shadow-xl font-medium pointer-events-none chart-tooltip border border-gray-800"
+                        style={{
+                          left: `${(hoveredReportSalesPoint.cx / 500) * 100}%`,
+                          top: `${(hoveredReportSalesPoint.cy / 200) * 100 - 15}%`,
+                          transform: 'translate(-50%, -100%)'
+                        }}
+                      >
+                        <p className="text-[9px] text-gray-400 font-normal">{hoveredReportSalesPoint.date}</p>
+                        <p className="font-bold mt-0.5">₹ {hoveredReportSalesPoint.sales.toLocaleString('en-IN')}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right: Sales by Category Distribution (Custom list & progress bars) */}
+                <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300 min-h-[360px]">
+                  <div className="border-b border-gray-50 pb-4 mb-4">
+                    <h4 className="font-bold text-gray-800 text-sm">Product Sales Distribution</h4>
+                    <p className="text-[10px] text-gray-400 font-semibold mt-0.5">Revenue break up by food category</p>
+                  </div>
+
+                  <div className="space-y-5 flex-1 flex flex-col justify-center">
+                    {reportData.categorySales.map((cat, idx) => (
+                      <div key={idx} className="space-y-1.5">
+                        <div className="flex items-center justify-between text-xs font-semibold">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                            <span className="text-gray-700">{cat.name}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-gray-800 font-bold">₹{cat.sales.toLocaleString('en-IN')}</span>
+                            <span className="text-gray-400 text-[10px] font-bold ml-1.5">({cat.percentage}%)</span>
+                          </div>
+                        </div>
+                        {/* Custom visual progress bar */}
+                        <div className="w-full bg-gray-50 border border-gray-100 h-2.5 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{
+                              width: `${cat.percentage}%`,
+                              backgroundColor: cat.color
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-3.5 text-center mt-4">
+                    <p className="text-[10px] text-gray-500 font-semibold leading-relaxed">
+                      💡 **Chicken** remains the top driving source, contributing to **{reportData.categorySales[0]?.percentage}%** of total sales this period.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Table section: Top Selling Products */}
+              <div className="bg-white border border-gray-150 rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-all">
+                <div className="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h4 className="font-bold text-gray-800 text-sm">Top Performing Products</h4>
+                    <p className="text-[10px] text-gray-400 font-semibold mt-0.5">Top inventory items ordered by volume</p>
+                  </div>
+                  <button
+                    onClick={() => navigate('/products')}
+                    className="text-xs font-bold text-[#e32929] hover:text-[#c41f1f] hover:underline transition-all self-start sm:self-center"
+                  >
+                    View All Products →
+                  </button>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs font-semibold text-gray-600">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-100 text-gray-400 uppercase tracking-wider text-[10px] font-bold">
+                        <th className="px-6 py-3.5 text-center w-16">Rank</th>
+                        <th className="px-6 py-3.5">Product Name</th>
+                        <th className="px-6 py-3.5">Category</th>
+                        <th className="px-6 py-3.5 text-right">Price</th>
+                        <th className="px-6 py-3.5 text-center">Units Sold</th>
+                        <th className="px-6 py-3.5 text-right">Revenue Generated</th>
+                        <th className="px-6 py-3.5 text-center w-32">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {reportData.topProducts.map((product) => (
+                        <tr key={product.rank} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="px-6 py-4 text-center">
+                            <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${
+                              product.rank === 1
+                                ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                : product.rank === 2
+                                ? 'bg-slate-100 text-slate-700'
+                                : product.rank === 3
+                                ? 'bg-orange-100 text-orange-800'
+                                : 'bg-gray-100 text-gray-500'
+                            }`}>
+                              {product.rank}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-gray-800 font-bold">{product.name}</td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold ${
+                              product.category === 'Chicken'
+                                ? 'bg-red-50 text-[#e32929] border border-red-100'
+                                : product.category === 'Fish & Seafood'
+                                ? 'bg-cyan-50 text-cyan-700 border border-cyan-100'
+                                : product.category === 'Kebabs'
+                                ? 'bg-amber-50 text-amber-700 border border-amber-100'
+                                : 'bg-purple-50 text-purple-700 border border-purple-100'
+                            }`}>
+                              {product.category}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right text-gray-700 font-bold">₹{product.price}</td>
+                          <td className="px-6 py-4 text-center font-bold text-gray-700">{product.sold}</td>
+                          <td className="px-6 py-4 text-right text-[#e32929] font-bold">
+                            ₹{product.revenue.toLocaleString('en-IN')}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className={`inline-block w-2.5 h-2.5 rounded-full ${
+                              product.stock === 'In Stock'
+                                ? 'bg-green-500'
+                                : product.stock === 'Low Stock'
+                                ? 'bg-amber-500'
+                                : 'bg-red-500'
+                            }`} title={product.stock} />
+                            <span className="text-[10px] text-gray-500 ml-2">{product.stock}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          )}
+
           {/* ──── OTHER NAVIGATION TABS (PLACEHOLDER PAGES) ──── */}
-          {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && activeTab !== 'inventory' && activeTab !== 'order-details' && (
+          {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && activeTab !== 'inventory' && activeTab !== 'order-details' && activeTab !== 'reports' && (
             <div className="bg-white border border-gray-150 rounded-2xl p-12 text-center shadow-sm animate-fade-in-up space-y-4 max-w-lg mx-auto mt-10">
               <div className="w-16 h-16 bg-red-50 text-[#e32929] rounded-full flex items-center justify-center mx-auto">
                 {activeTab === 'users' && <Users className="w-8 h-8" />}
