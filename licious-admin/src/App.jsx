@@ -7,10 +7,12 @@ import supabase, { isSupabaseConfigured } from './lib/supabase'
 // TEMPORARY: Dev-only bypass to preview Inventory without Supabase auth.
 // Access via: http://localhost:5173/?preview=inventory
 // Remove this block once Supabase is configured and login works.
-const TEMP_INVENTORY_PREVIEW =
-  import.meta.env.DEV &&
-  typeof window !== 'undefined' &&
-  new URLSearchParams(window.location.search).get('preview') === 'inventory'
+const getPreviewTab = () => {
+  if (!import.meta.env.DEV || typeof window === 'undefined') return null
+  return new URLSearchParams(window.location.search).get('preview')
+}
+const TEMP_PREVIEW_TAB = getPreviewTab()
+
 
 function App() {
   const [user, setUser] = useState(null)
@@ -85,15 +87,15 @@ function App() {
     )
   }
 
-  // TEMPORARY: Render Inventory preview without auth — remove when Supabase is ready.
-  if (TEMP_INVENTORY_PREVIEW) {
+  // TEMPORARY: Render preview without auth — remove when Supabase is ready.
+  if (TEMP_PREVIEW_TAB) {
     return (
       <DashboardPage
         user={{ email: 'admin@dev.licious.com' }}
         onLogout={() => {
           window.location.href = window.location.pathname
         }}
-        initialActiveTab="inventory"
+        initialActiveTab={TEMP_PREVIEW_TAB}
       />
     )
   }
