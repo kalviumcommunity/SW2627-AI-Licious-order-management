@@ -1,6 +1,31 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import meatHero from '../assets/meat_hero_transparent.png'
 import supabase, { isSupabaseConfigured } from '../lib/supabase'
+
+const RESET_EMAIL_COOLDOWN_MS = 60 * 1000
+
+const getResetCooldownKey = (email) => `licious-reset-cooldown:${email.trim().toLowerCase()}`
+
+const getRemainingResetCooldown = (email) => {
+  if (typeof window === 'undefined' || !email) return 0
+
+  const expiresAt = Number(window.localStorage.getItem(getResetCooldownKey(email)))
+  return Number.isFinite(expiresAt) ? Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000)) : 0
+}
+
+const getAuthErrorMessage = (authError, fallbackMessage) => {
+  const message = authError?.message
+
+  if (typeof message === 'string' && message.trim() && message.trim() !== '{}') {
+    return message
+  }
+
+  if (message && typeof message === 'object' && typeof message.message === 'string') {
+    return message.message
+  }
+
+  return fallbackMessage
+}
 
 // Licious Logo — drop your logo.png into the public/ folder
 function LiciousLogo({ className = '', invert = false, src = '/logo.png' }) {
@@ -81,26 +106,38 @@ function EyeIcon() {
   )
 }
 
-// OTP Icon
-function OtpIcon() {
-  return (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z" />
-      <path d="M12 6v6l4 2" />
-    </svg>
-  )
-}
-
-export default function LoginPage({ onLogin, isSupabaseConfigured: hasSupabaseConfig = isSupabaseConfigured }) {
+export default function LoginPage({
+  onLogin,
+  isPasswordRecovery = false,
+  recoveryError = '',
+  isSupabaseConfigured: hasSupabaseConfig = isSupabaseConfigured
+}) {
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
+  const [isForgotPassword, setIsForgotPassword] = useState(false)
+  const [resetCooldownSeconds, setResetCooldownSeconds] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
-  const [showOtpInput, setShowOtpInput] = useState(false)
-  const [otp, setOtp] = useState('')
+
+  useEffect(() => {
+    if (resetCooldownSeconds <= 0) return undefined
+
+    const interval = window.setInterval(() => {
+      setResetCooldownSeconds(getRemainingResetCooldown(email))
+    }, 1000)
+
+    return () => window.clearInterval(interval)
+  }, [email, resetCooldownSeconds])
+
+  const startResetCooldown = () => {
+    const expiresAt = Date.now() + RESET_EMAIL_COOLDOWN_MS
+    window.localStorage.setItem(getResetCooldownKey(email), String(expiresAt))
+    setResetCooldownSeconds(Math.ceil(RESET_EMAIL_COOLDOWN_MS / 1000))
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -110,30 +147,69 @@ export default function LoginPage({ onLogin, isSupabaseConfigured: hasSupabaseCo
       return
     }
 
-    if (showOtpInput) {
-      if (!otp) {
-        setError('Please enter the OTP code sent to your email.')
+    if (isPasswordRecovery) {
+      if (!password || password.length < 6) {
+        setError('Please enter a new password with at least 6 characters.')
+        return
+      }
+
+      if (password !== confirmPassword) {
+        setError('The new passwords do not match.')
+        return
+      }
+
+      setIsLoading(true)
+      setError('')
+      const { error: authError } = await supabase.auth.updateUser({ password })
+      setIsLoading(false)
+
+      if (authError) {
+        setError(getAuthErrorMessage(authError, 'Unable to update your password. Please try again.'))
+        return
+      }
+
+      setMessage('Your password has been updated. Redirecting to your dashboard...')
+      window.setTimeout(() => {
+        window.location.assign('/')
+      }, 1000)
+      return
+    }
+
+    if (isForgotPassword) {
+      if (!email) {
+        setError('Please enter your email address.')
+        return
+      }
+
+      const remainingCooldown = getRemainingResetCooldown(email)
+      if (remainingCooldown > 0) {
+        setResetCooldownSeconds(remainingCooldown)
+        setMessage(`Please wait ${remainingCooldown} seconds before requesting another reset link.`)
         return
       }
 
       setIsLoading(true)
       setError('')
       setMessage('')
-
-      const { error: authError } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: 'email'
+      const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/reset-password` : undefined
+      const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo
       })
-
       setIsLoading(false)
 
       if (authError) {
-        setError(authError.message || 'Invalid OTP code. Please try again.')
+        if (authError.code === 'over_email_send_rate_limit') {
+          startResetCooldown()
+          setError('Too many reset emails were requested. Please wait a minute before trying again.')
+          return
+        }
+
+        setError(getAuthErrorMessage(authError, 'Unable to send the reset link. Check the SMTP sender address and API key in Supabase.'))
         return
       }
 
-      onLogin?.()
+      startResetCooldown()
+      setMessage('If an account exists for this email, a password reset link has been sent.')
       return
     }
 
@@ -155,7 +231,7 @@ export default function LoginPage({ onLogin, isSupabaseConfigured: hasSupabaseCo
     setIsLoading(false)
 
     if (authError) {
-      setError(authError.message || 'Authentication failed. Please try again.')
+      setError(getAuthErrorMessage(authError, 'Authentication failed. Please try again.'))
       return
     }
 
@@ -167,38 +243,6 @@ export default function LoginPage({ onLogin, isSupabaseConfigured: hasSupabaseCo
     }
 
     onLogin?.()
-  }
-
-  const handleOtpLogin = async () => {
-    if (!supabase || !hasSupabaseConfig) {
-      setError('Supabase is not configured yet. Add your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to the admin .env file.')
-      return
-    }
-
-    if (!email) {
-      setError('Please enter your email to receive an OTP code.')
-      return
-    }
-
-    setIsLoading(true)
-    setError('')
-    setMessage('')
-
-    const redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined
-    const { error: authError } = await supabase.auth.signInWithOtp({
-      email,
-      options: redirectTo ? { emailRedirectTo: redirectTo } : undefined
-    })
-
-    setIsLoading(false)
-
-    if (authError) {
-      setError(authError.message || 'Unable to send the OTP code right now.')
-      return
-    }
-
-    setMessage('OTP code sent! Please check your email inbox.')
-    setShowOtpInput(true)
   }
 
   return (
@@ -258,18 +302,18 @@ export default function LoginPage({ onLogin, isSupabaseConfigured: hasSupabaseCo
           <div className="mb-8 flex flex-col items-center gap-3 text-center">
             <LiciousLogo className="h-20" src="/logo.png?v=3" />
             <h2 className="text-3xl font-bold text-gray-900">
-              {showOtpInput ? 'Verify OTP' : isSignUp ? 'Create Admin Account' : 'Admin Login'}
+              {isPasswordRecovery ? 'Set New Password' : isForgotPassword ? 'Reset Password' : isSignUp ? 'Create Admin Account' : 'Admin Login'}
             </h2>
             <p className="text-sm text-gray-500">
-              {showOtpInput ? 'Enter the code sent to your email' : isSignUp ? 'Register a new admin account' : 'Access your admin dashboard'}
+              {isPasswordRecovery ? 'Choose a new password for your account' : isForgotPassword ? 'We’ll email you a secure reset link' : isSignUp ? 'Register a new admin account' : 'Access your admin dashboard'}
             </p>
           </div>
 
           <div className="overflow-hidden rounded-[30px] border border-black/10 bg-white p-8 shadow-[0_25px_90px_rgba(15,23,42,0.08)]">
             <form className="space-y-6" onSubmit={handleSubmit}>
-              {error ? (
+              {error || recoveryError ? (
                 <div className="rounded-[16px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                  {error}
+                  {error || recoveryError}
                 </div>
               ) : null}
 
@@ -279,76 +323,8 @@ export default function LoginPage({ onLogin, isSupabaseConfigured: hasSupabaseCo
                 </div>
               ) : null}
 
-              {showOtpInput ? (
-                <>
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address
-                    </label>
-                    <div className="flex items-center gap-3 rounded-[18px] border border-gray-200 bg-gray-50 px-4 py-3">
-                      <EmailIcon />
-                      <input
-                        id="email"
-                        type="email"
-                        value={email}
-                        disabled
-                        className="w-full border-none bg-transparent text-sm text-gray-500 outline-none cursor-not-allowed"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
-                      One-Time Password (OTP)
-                    </label>
-                    <div className="flex items-center gap-3 rounded-[18px] border border-gray-200 bg-white px-4 py-3 focus-within:border-[#e32929] focus-within:ring-1 focus-within:ring-[#e32929]/20">
-                      <OtpIcon />
-                      <input
-                        id="otp"
-                        type="text"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        placeholder="Enter 6-digit OTP code"
-                        className="w-full border-none bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none tracking-wider font-semibold"
-                        maxLength={6}
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    id="verify-otp-btn"
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full rounded-[18px] bg-[#e32929] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(227,41,41,0.22)] transition hover:bg-[#c41f1f] disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    {isLoading ? 'Verifying...' : 'Verify OTP'}
-                  </button>
-
-                  <div className="flex flex-col gap-2">
-                    <button
-                      type="button"
-                      onClick={handleOtpLogin}
-                      disabled={isLoading}
-                      className="w-full text-sm font-semibold text-[#e32929] hover:underline"
-                    >
-                      Resend OTP Code
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowOtpInput(false)
-                        setOtp('')
-                        setError('')
-                        setMessage('')
-                      }}
-                      className="w-full text-sm font-semibold text-gray-500 hover:underline"
-                    >
-                      Back to Password Login
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
+              <>
+                {!isPasswordRecovery && (
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                       Email Address
@@ -365,10 +341,12 @@ export default function LoginPage({ onLogin, isSupabaseConfigured: hasSupabaseCo
                       />
                     </div>
                   </div>
+                )}
 
+                  {(!isForgotPassword || isPasswordRecovery) && (
                   <div>
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                      Password
+                      {isPasswordRecovery ? 'New Password' : 'Password'}
                     </label>
                     <div className="flex items-center gap-3 rounded-[18px] border border-gray-200 bg-white px-4 py-3 focus-within:border-[#e32929] focus-within:ring-1 focus-within:ring-[#e32929]/20">
                       <LockIcon />
@@ -377,7 +355,8 @@ export default function LoginPage({ onLogin, isSupabaseConfigured: hasSupabaseCo
                         type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter your password"
+                        placeholder={isPasswordRecovery ? 'Enter your new password' : 'Enter your password'}
+                        autoComplete={isPasswordRecovery ? 'new-password' : 'current-password'}
                         className="w-full border-none bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
                       />
                       <button
@@ -390,17 +369,48 @@ export default function LoginPage({ onLogin, isSupabaseConfigured: hasSupabaseCo
                       </button>
                     </div>
                   </div>
+                  )}
+
+                  {isPasswordRecovery && (
+                    <div>
+                      <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
+                        Confirm New Password
+                      </label>
+                      <div className="flex items-center gap-3 rounded-[18px] border border-gray-200 bg-white px-4 py-3 focus-within:border-[#e32929] focus-within:ring-1 focus-within:ring-[#e32929]/20">
+                        <LockIcon />
+                        <input
+                          id="confirm-password"
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Re-enter your new password"
+                          autoComplete="new-password"
+                          className="w-full border-none bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <button
                     id="login-btn"
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isLoading || (isForgotPassword && resetCooldownSeconds > 0)}
                     className="w-full rounded-[18px] bg-[#e32929] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(227,41,41,0.22)] transition hover:bg-[#c41f1f] disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    {isLoading ? 'Please wait...' : isSignUp ? 'Sign Up' : 'Login'}
+                    {isLoading
+                      ? 'Please wait...'
+                      : isPasswordRecovery
+                        ? 'Update Password'
+                        : isForgotPassword && resetCooldownSeconds > 0
+                          ? `Try again in ${resetCooldownSeconds}s`
+                          : isForgotPassword
+                            ? 'Send Reset Link'
+                            : isSignUp
+                              ? 'Sign Up'
+                              : 'Login'}
                   </button>
 
-                  <button
+                  {!isForgotPassword && !isPasswordRecovery && <button
                     type="button"
                     onClick={() => {
                       setIsSignUp((value) => !value)
@@ -410,26 +420,33 @@ export default function LoginPage({ onLogin, isSupabaseConfigured: hasSupabaseCo
                     className="w-full text-sm font-semibold text-[#e32929] hover:underline"
                   >
                     {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
-                  </button>
+                  </button>}
 
-                  <div className="flex items-center gap-3 text-xs text-gray-400">
-                    <div className="h-px flex-1 bg-gray-200" />
-                    <span>or</span>
-                    <div className="h-px flex-1 bg-gray-200" />
-                  </div>
-
-                  <button
-                    id="login-otp-btn"
+                  {!isSignUp && !isForgotPassword && !isPasswordRecovery && <button
                     type="button"
-                    onClick={handleOtpLogin}
-                    disabled={isLoading}
-                    className="flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#e32929] bg-white px-5 py-3 text-sm font-semibold text-[#e32929] transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+                    onClick={() => {
+                      setIsForgotPassword(true)
+                      setResetCooldownSeconds(getRemainingResetCooldown(email))
+                      setError('')
+                      setMessage('')
+                    }}
+                    className="w-full text-sm font-semibold text-[#e32929] hover:underline"
                   >
-                    <OtpIcon />
-                    Login With OTP
-                  </button>
-                </>
-              )}
+                    Forgot password?
+                  </button>}
+
+                  {isForgotPassword && !isPasswordRecovery && <button
+                    type="button"
+                    onClick={() => {
+                      setIsForgotPassword(false)
+                      setError('')
+                      setMessage('')
+                    }}
+                    className="w-full text-sm font-semibold text-gray-500 hover:underline"
+                  >
+                    Back to login
+                  </button>}
+              </>
             </form>
           </div>
 
