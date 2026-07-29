@@ -2164,8 +2164,13 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
             </div>
           )}
 
+          {/* ──── VIEW: SETTINGS TAB ──── */}
+          {activeTab === 'settings' && (
+            <SettingsSection user={user} />
+          )}
+
           {/* ──── OTHER NAVIGATION TABS (PLACEHOLDER PAGES) ──── */}
-          {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && activeTab !== 'inventory' && activeTab !== 'order-details' && activeTab !== 'reports' && (
+          {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && activeTab !== 'inventory' && activeTab !== 'order-details' && activeTab !== 'reports' && activeTab !== 'settings' && (
             <div className="bg-white border border-gray-150 rounded-2xl p-12 text-center shadow-sm animate-fade-in-up space-y-4 max-w-lg mx-auto mt-10">
               <div className="w-16 h-16 bg-red-50 text-[#e32929] rounded-full flex items-center justify-center mx-auto">
                 {activeTab === 'users' && <Users className="w-8 h-8" />}
