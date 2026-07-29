@@ -17,6 +17,14 @@ const TEMP_PREVIEW_TAB = getPreviewTab()
 function App() {
   const [user, setUser] = useState(null)
   const [isAuthLoading, setIsAuthLoading] = useState(true)
+  const [passwordRecoveryError, setPasswordRecoveryError] = useState('')
+  const isPasswordRecoveryRoute = typeof window !== 'undefined' && window.location.pathname === '/reset-password'
+  const passwordRecoveryCode = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('code')
+    : null
+  const passwordRecoveryTokens = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.hash.slice(1))
+    : null
 
   useEffect(() => {
     let isMounted = true
@@ -34,12 +42,41 @@ function App() {
 
 
     const initializeSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession()
+      let session
+      let error
+
+      if (isPasswordRecoveryRoute && passwordRecoveryCode) {
+        const result = await supabase.auth.exchangeCodeForSession(passwordRecoveryCode)
+        session = result.data.session
+        error = result.error
+
+        if (!error) {
+          window.history.replaceState({}, '', '/reset-password')
+        }
+      } else if (isPasswordRecoveryRoute && passwordRecoveryTokens?.get('access_token') && passwordRecoveryTokens.get('refresh_token')) {
+        const result = await supabase.auth.setSession({
+          access_token: passwordRecoveryTokens.get('access_token'),
+          refresh_token: passwordRecoveryTokens.get('refresh_token')
+        })
+        session = result.data.session
+        error = result.error
+
+        if (!error) {
+          window.history.replaceState({}, '', '/reset-password')
+        }
+      } else {
+        const result = await supabase.auth.getSession()
+        session = result.data.session
+        error = result.error
+      }
 
       if (!isMounted) return
 
       if (error) {
         console.error('Supabase session error:', error)
+        if (isPasswordRecoveryRoute) {
+          setPasswordRecoveryError('This password reset link is invalid or has expired. Please request a new one.')
+        }
       }
 
       setUser(session?.user ?? null)
@@ -100,7 +137,14 @@ function App() {
     )
   }
 
-  return user ? (
+  return isPasswordRecoveryRoute ? (
+    <LoginPage
+      onLogin={() => setIsAuthLoading(false)}
+      isPasswordRecovery
+      recoveryError={passwordRecoveryError}
+      isSupabaseConfigured={isSupabaseConfigured}
+    />
+  ) : user ? (
     <Routes>
       <Route path="/" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="dashboard" />} />
       <Route path="/live-orders" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="live-orders" />} />

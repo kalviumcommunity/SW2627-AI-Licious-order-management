@@ -9,7 +9,7 @@ This admin portal includes Supabase authentication, client-side mock data for or
 ## Features
 
 - Supabase email/password authentication
-- OTP login via Supabase email-based sign-in
+- Password login and Supabase password recovery
 - Admin dashboard with navigation tabs for orders, inventory, users, products, offers, reports, and settings
 - Mock live orders and completed orders views
 - Order detail view with invoice download and print support
@@ -134,7 +134,7 @@ For deployment, serve the files in `licious-admin/dist/` with a static hosting p
 
 - `licious-admin/src/App.jsx` handles authentication state and routing.
 - `licious-admin/src/lib/supabase.js` creates the Supabase client using environment values.
-- `licious-admin/src/pages/LoginPage.jsx` provides login, signup, and OTP flows.
+- `licious-admin/src/pages/LoginPage.jsx` provides login, signup, and password-recovery flows.
 - `licious-admin/src/pages/DashboardPage.jsx` renders the main admin interface, including order and inventory views.
 - `licious-admin/src/pages/OrderDetailsPage.jsx` shows detailed order information, invoice printing, and download actions.
 - `licious-admin/src/pages/InventorySection.jsx` provides a searchable and filterable inventory list.
@@ -142,7 +142,7 @@ For deployment, serve the files in `licious-admin/dist/` with a static hosting p
 
 ## APIs, Database, Authentication, and State Management
 
-- Authentication: Supabase authentication is used for sign-in, sign-up, OTP login, and sign-out.
+- Authentication: Supabase authentication is used for password sign-in, sign-up, password recovery, and sign-out.
 - Database/API: No backend API routes or database persistence files are present in this repository. Order and inventory data are currently mocked in the frontend.
 - State management: Local React component state is used across pages.
 

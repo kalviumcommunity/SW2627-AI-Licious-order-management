@@ -9,7 +9,14 @@ const hasRequiredConfig = Boolean(
   !supabaseAnonKey.includes('your-anon-key')
 )
 
-const supabase = hasRequiredConfig ? createClient(supabaseUrl, supabaseAnonKey) : null
+const supabase = hasRequiredConfig
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        // The reset route exchanges the recovery code after React has loaded.
+        detectSessionInUrl: false
+      }
+    })
+  : null
 
 export const isSupabaseConfigured = hasRequiredConfig
 export default supabase
