@@ -8,7 +8,6 @@ import {
   Phone,
   MapPin,
   CreditCard,
-  Calendar,
   Clock,
   Truck,
   CheckCircle2,
@@ -92,12 +91,6 @@ export default function OrderDetailsPage({ orderId, orders, onUpdateStatus }) {
     link.click()
     document.body.removeChild(link)
   }
-
-  // Calculate items unit summary
-  const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const deliveryCharges = 49
-  const tax = Math.round(subtotal * 0.05) // 5% GST
-  const estimatedTotal = subtotal + deliveryCharges + tax
 
   return (
     <div className="space-y-6 animate-fade-in-up">
