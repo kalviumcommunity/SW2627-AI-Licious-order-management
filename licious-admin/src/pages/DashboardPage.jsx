@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import OrderDetailsPage from './OrderDetailsPage'
 import SettingsSection from './SettingsSection'
 import InventorySection from './InventorySection'
+import OffersSection from './OffersSection'
+import OfferDetailsPage from './OfferDetailsPage'
 
 import {
   LayoutDashboard,
