@@ -130,6 +130,7 @@ function App() {
       <Route path="/products" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="products" />} />
       <Route path="/inventory" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="inventory" />} />
       <Route path="/offers" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="offers" />} />
+      <Route path="/offers/:id" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="offer-details" />} />
       <Route path="/reports" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="reports" />} />
       <Route path="/settings" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="settings" />} />
       <Route path="/order/:id" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="order-details" />} />
