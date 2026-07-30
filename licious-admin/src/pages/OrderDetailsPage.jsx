@@ -92,6 +92,8 @@ export default function OrderDetailsPage({ orderId, orders, onUpdateStatus }) {
     document.body.removeChild(link)
   }
 
+  // Calculate items unit summary when invoice totals are needed in future
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       {/* ── PRINT-ONLY INVOICE HEADER ── */}

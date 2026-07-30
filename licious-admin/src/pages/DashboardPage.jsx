@@ -230,74 +230,70 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
     let aov
     let completionRate
     let categorySales
-    let topProducts = [
-      { rank: 1, name: 'Chicken Curry Cut (1 kg)', category: 'Chicken', price: 450, sold: 184, revenue: 82800, stock: 'In Stock' },
-      { rank: 2, name: 'Chicken Biryani (1 kg)', category: 'Ready to Cook', price: 370, sold: 142, revenue: 52540, stock: 'In Stock' },
-      { rank: 3, name: 'Rawas Fillet (500 g)', category: 'Fish & Seafood', price: 500, sold: 98, revenue: 49000, stock: 'Out of Stock' },
-      { rank: 4, name: 'Prawns Medium (500 g)', category: 'Fish & Seafood', price: 250, sold: 156, revenue: 39000, stock: 'In Stock' },
-      { rank: 5, name: 'Chicken Seekh Kebab (250 g)', category: 'Kebabs', price: 600, sold: 62, revenue: 37200, stock: 'Low Stock' }
-    ]
 
     const currentOrdersDeliveredRevenue = orders
       .filter(o => o.status === 'Delivered')
       .reduce((sum, o) => sum + o.price, 0)
     const currentOrdersCount = orders.length
 
-    if (reportRange === 'Today') {
-      salesPoints = [
-        { date: '09:00 AM', sales: 12000, cx: 40, cy: 160 },
-        { date: '12:00 PM', sales: 28000, cx: 150, cy: 110 },
-        { date: '03:00 PM', sales: 15000, cx: 260, cy: 150 },
-        { date: '06:00 PM', sales: 35000, cx: 370, cy: 80 },
-        { date: '09:00 PM', sales: 45000, cx: 460, cy: 50 }
-      ]
-      totalRevenue = currentOrdersDeliveredRevenue + 135000
-      totalOrdersCount = currentOrdersCount + 124
-      aov = Math.round(totalRevenue / totalOrdersCount)
-      completionRate = 96.8
-      categorySales = [
-        { name: 'Chicken', sales: 74250, percentage: 55, color: '#e32929' },
-        { name: 'Fish & Seafood', sales: 27000, percentage: 20, color: '#06b6d4' },
-        { name: 'Kebabs', sales: 20250, percentage: 15, color: '#f59e0b' },
-        { name: 'Ready to Cook', sales: 13500, percentage: 10, color: '#8b5cf6' }
-      ]
-    } else if (reportRange === 'Last 30 Days') {
-      salesPoints = [
-        { date: 'Week 1', sales: 180000, cx: 40, cy: 150 },
-        { date: 'Week 2', sales: 240000, cx: 180, cy: 110 },
-        { date: 'Week 3', sales: 310000, cx: 320, cy: 60 },
-        { date: 'Week 4', sales: 285000, cx: 460, cy: 80 }
-      ]
-      totalRevenue = currentOrdersDeliveredRevenue + 1015000
-      totalOrdersCount = currentOrdersCount + 1340
-      aov = Math.round(totalRevenue / totalOrdersCount)
-      completionRate = 93.4
-      categorySales = [
-        { name: 'Chicken', sales: 456750, percentage: 45, color: '#e32929' },
-        { name: 'Fish & Seafood', sales: 253750, percentage: 25, color: '#06b6d4' },
-        { name: 'Kebabs', sales: 203000, percentage: 20, color: '#f59e0b' },
-        { name: 'Ready to Cook', sales: 101500, percentage: 10, color: '#8b5cf6' }
-      ]
-    } else if (reportRange === 'This Year') {
-      salesPoints = [
-        { date: 'Jan-Feb', sales: 850000, cx: 40, cy: 160 },
-        { date: 'Mar-Apr', sales: 1200000, cx: 150, cy: 110 },
-        { date: 'May-Jun', sales: 1450000, cx: 260, cy: 80 },
-        { date: 'Jul-Aug', sales: 1680000, cx: 370, cy: 50 },
-        { date: 'Sep-Oct', sales: 1350000, cx: 460, cy: 90 }
-      ]
-      totalRevenue = currentOrdersDeliveredRevenue + 6530000
-      totalOrdersCount = currentOrdersCount + 8920
-      aov = Math.round(totalRevenue / totalOrdersCount)
-      completionRate = 95.1
-      categorySales = [
-        { name: 'Chicken', sales: 2938500, percentage: 45, color: '#e32929' },
-        { name: 'Fish & Seafood', sales: 1632500, percentage: 25, color: '#06b6d4' },
-        { name: 'Kebabs', sales: 1306000, percentage: 20, color: '#f59e0b' },
-        { name: 'Ready to Cook', sales: 653000, percentage: 10, color: '#8b5cf6' }
-      ]
-    } else {
-      salesPoints = [
+    const reportConfig = {
+      Today: {
+        salesPoints: [
+          { date: '09:00 AM', sales: 12000, cx: 40, cy: 160 },
+          { date: '12:00 PM', sales: 28000, cx: 150, cy: 110 },
+          { date: '03:00 PM', sales: 15000, cx: 260, cy: 150 },
+          { date: '06:00 PM', sales: 35000, cx: 370, cy: 80 },
+          { date: '09:00 PM', sales: 45000, cx: 460, cy: 50 }
+        ],
+        totalRevenue: currentOrdersDeliveredRevenue + 135000,
+        totalOrdersCount: currentOrdersCount + 124,
+        completionRate: 96.8,
+        categorySales: [
+          { name: 'Chicken', sales: 74250, percentage: 55, color: '#e32929' },
+          { name: 'Fish & Seafood', sales: 27000, percentage: 20, color: '#06b6d4' },
+          { name: 'Kebabs', sales: 20250, percentage: 15, color: '#f59e0b' },
+          { name: 'Ready to Cook', sales: 13500, percentage: 10, color: '#8b5cf6' }
+        ]
+      },
+      'Last 30 Days': {
+        salesPoints: [
+          { date: 'Week 1', sales: 180000, cx: 40, cy: 150 },
+          { date: 'Week 2', sales: 240000, cx: 180, cy: 110 },
+          { date: 'Week 3', sales: 310000, cx: 320, cy: 60 },
+          { date: 'Week 4', sales: 285000, cx: 460, cy: 80 }
+        ],
+        totalRevenue: currentOrdersDeliveredRevenue + 1015000,
+        totalOrdersCount: currentOrdersCount + 1340,
+        completionRate: 93.4,
+        categorySales: [
+          { name: 'Chicken', sales: 456750, percentage: 45, color: '#e32929' },
+          { name: 'Fish & Seafood', sales: 253750, percentage: 25, color: '#06b6d4' },
+          { name: 'Kebabs', sales: 203000, percentage: 20, color: '#f59e0b' },
+          { name: 'Ready to Cook', sales: 101500, percentage: 10, color: '#8b5cf6' }
+        ]
+      },
+      'This Year': {
+        salesPoints: [
+          { date: 'Jan-Feb', sales: 850000, cx: 40, cy: 160 },
+          { date: 'Mar-Apr', sales: 1200000, cx: 150, cy: 110 },
+          { date: 'May-Jun', sales: 1450000, cx: 260, cy: 80 },
+          { date: 'Jul-Aug', sales: 1680000, cx: 370, cy: 50 },
+          { date: 'Sep-Oct', sales: 1350000, cx: 460, cy: 90 }
+        ],
+        totalRevenue: currentOrdersDeliveredRevenue + 6530000,
+        totalOrdersCount: currentOrdersCount + 8920,
+        completionRate: 95.1,
+        categorySales: [
+          { name: 'Chicken', sales: 2938500, percentage: 45, color: '#e32929' },
+          { name: 'Fish & Seafood', sales: 1632500, percentage: 25, color: '#06b6d4' },
+          { name: 'Kebabs', sales: 1306000, percentage: 20, color: '#f59e0b' },
+          { name: 'Ready to Cook', sales: 653000, percentage: 10, color: '#8b5cf6' }
+        ]
+      }
+    }
+
+    const selectedReport = reportConfig[reportRange] || {
+      salesPoints: [
         { date: '22 Jul', sales: 145000, cx: 40, cy: 150 },
         { date: '23 Jul', sales: 162000, cx: 110, cy: 130 },
         { date: '24 Jul', sales: 128000, cx: 180, cy: 160 },
@@ -305,12 +301,11 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
         { date: '26 Jul', sales: 195000, cx: 320, cy: 100 },
         { date: '27 Jul', sales: 210000, cx: 390, cy: 80 },
         { date: '28 Jul', sales: 175000, cx: 460, cy: 120 }
-      ]
-      totalRevenue = currentOrdersDeliveredRevenue + 1200000
-      totalOrdersCount = currentOrdersCount + 1580
-      aov = Math.round(totalRevenue / totalOrdersCount)
-      completionRate = 94.8
-      categorySales = [
+      ],
+      totalRevenue: currentOrdersDeliveredRevenue + 1200000,
+      totalOrdersCount: currentOrdersCount + 1580,
+      completionRate: 94.8,
+      categorySales: [
         { name: 'Chicken', sales: 540000, percentage: 45, color: '#e32929' },
         { name: 'Fish & Seafood', sales: 300000, percentage: 25, color: '#06b6d4' },
         { name: 'Kebabs', sales: 240000, percentage: 20, color: '#f59e0b' },
@@ -318,13 +313,21 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
       ]
     }
 
+    const topProducts = [
+      { rank: 1, name: 'Chicken Curry Cut (1 kg)', category: 'Chicken', price: 450, sold: 184, revenue: 82800, stock: 'In Stock' },
+      { rank: 2, name: 'Chicken Biryani (1 kg)', category: 'Ready to Cook', price: 370, sold: 142, revenue: 52540, stock: 'In Stock' },
+      { rank: 3, name: 'Rawas Fillet (500 g)', category: 'Fish & Seafood', price: 500, sold: 98, revenue: 49000, stock: 'Out of Stock' },
+      { rank: 4, name: 'Prawns Medium (500 g)', category: 'Fish & Seafood', price: 250, sold: 156, revenue: 39000, stock: 'In Stock' },
+      { rank: 5, name: 'Chicken Seekh Kebab (250 g)', category: 'Kebabs', price: 600, sold: 62, revenue: 37200, stock: 'Low Stock' }
+    ]
+
     return {
-      salesPoints,
-      totalRevenue,
-      totalOrdersCount,
-      aov,
-      completionRate,
-      categorySales,
+      salesPoints: selectedReport.salesPoints,
+      totalRevenue: selectedReport.totalRevenue,
+      totalOrdersCount: selectedReport.totalOrdersCount,
+      aov: Math.round(selectedReport.totalRevenue / selectedReport.totalOrdersCount),
+      completionRate: selectedReport.completionRate,
+      categorySales: selectedReport.categorySales,
       topProducts
     }
   }, [reportRange, orders])
