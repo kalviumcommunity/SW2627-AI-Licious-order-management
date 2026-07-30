@@ -224,13 +224,6 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
 
   // Dynamically generate data based on reportRange
   const reportData = useMemo(() => {
-    let salesPoints
-    let totalRevenue
-    let totalOrdersCount
-    let aov
-    let completionRate
-    let categorySales
-
     const currentOrdersDeliveredRevenue = orders
       .filter(o => o.status === 'Delivered')
       .reduce((sum, o) => sum + o.price, 0)
