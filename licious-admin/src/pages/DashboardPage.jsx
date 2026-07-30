@@ -5,6 +5,8 @@ import SettingsSection from './SettingsSection'
 import InventorySection from './InventorySection'
 import OffersSection from './OffersSection'
 import OfferDetailsPage from './OfferDetailsPage'
+import ProductsSection from './ProductsSection'
+
 
 import {
   LayoutDashboard,
@@ -1684,12 +1686,16 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
             <SettingsSection user={user} />
           )}
 
-          {activeTab === 'inventory' && (
+           {activeTab === 'inventory' && (
             <InventorySection />
           )}
 
+          {activeTab === 'products' && (
+            <ProductsSection />
+          )}
+
           {/* ──── OTHER NAVIGATION TABS (PLACEHOLDER PAGES) ──── */}
-          {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && activeTab !== 'inventory' && activeTab !== 'order-details' && activeTab !== 'reports' && activeTab !== 'settings' && activeTab !== 'offers' && activeTab !== 'offer-details' && (
+          {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && activeTab !== 'inventory' && activeTab !== 'products' && activeTab !== 'order-details' && activeTab !== 'reports' && activeTab !== 'settings' && activeTab !== 'offers' && activeTab !== 'offer-details' && (
             <div className="bg-white border border-gray-150 rounded-2xl p-12 text-center shadow-sm animate-fade-in-up space-y-4 max-w-lg mx-auto mt-10">
               <div className="w-16 h-16 bg-red-50 text-[#e32929] rounded-full flex items-center justify-center mx-auto">
                 {activeTab === 'users' && <Users className="w-8 h-8" />}
