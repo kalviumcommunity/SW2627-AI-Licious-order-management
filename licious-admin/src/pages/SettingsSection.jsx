@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   User,
   Store,
@@ -18,7 +18,6 @@ import {
   Edit2,
   X,
   ChevronRight,
-  ShieldCheck,
   Smartphone,
   Laptop
 } from 'lucide-react'
@@ -80,7 +79,7 @@ const initialLogs = [
   { id: 5, action: 'Store Contact Number Updated', dateTime: '27 July 2026, 12:00 PM', adminName: 'Admin User' }
 ]
 
-export default function SettingsSection({ user }) {
+export default function SettingsSection() {
   // Active Settings Navigation Section Tab
   const [activeSubTab, setActiveSubTab] = useState('profile')
 
