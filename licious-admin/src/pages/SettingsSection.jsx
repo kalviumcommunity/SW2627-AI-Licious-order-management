@@ -2,7 +2,6 @@ import { useState } from 'react'
 import {
   User,
   Store,
-  Users,
   Bell,
   ShoppingBag,
   ScrollText,
