@@ -9,7 +9,6 @@ import OfferDetailsPage from './OfferDetailsPage'
 import {
   LayoutDashboard,
   ShoppingBag,
-  Users,
   Package,
   ScrollText,
   Tag,
@@ -391,7 +390,6 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'orders-dropdown', label: 'Orders', icon: ShoppingBag, hasSubmenu: true },
-    { id: 'users', label: 'Users', icon: Users },
     { id: 'products', label: 'Products', icon: Package },
     { id: 'inventory', label: 'Inventory', icon: ScrollText },
     { id: 'offers', label: 'Offers', icon: Tag },
@@ -959,7 +957,7 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
                       {/* Left: Customer Info */}
                       <div className="flex items-center gap-3.5 min-w-[200px]">
                         <div className="w-12 h-12 bg-red-50 text-[#e32929] rounded-xl flex items-center justify-center flex-shrink-0">
-                          <Users className="w-5.5 h-5.5" />
+                          <ShoppingBag className="w-5.5 h-5.5" />
                         </div>
                         <div>
                           <h5 className="font-bold text-gray-800 text-sm">{order.customerName}</h5>
@@ -1147,7 +1145,7 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
                       {/* Customer Details */}
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 bg-red-50 text-[#e32929] rounded-xl flex items-center justify-center flex-shrink-0">
-                          <Users className="w-5 h-5" />
+                          <ShoppingBag className="w-5 h-5" />
                         </div>
                         <div>
                           <h6 className="font-bold text-gray-800 text-sm leading-tight">{order.customerName}</h6>
@@ -1692,7 +1690,6 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
           {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && activeTab !== 'inventory' && activeTab !== 'order-details' && activeTab !== 'reports' && activeTab !== 'settings' && activeTab !== 'offers' && activeTab !== 'offer-details' && (
             <div className="bg-white border border-gray-150 rounded-2xl p-12 text-center shadow-sm animate-fade-in-up space-y-4 max-w-lg mx-auto mt-10">
               <div className="w-16 h-16 bg-red-50 text-[#e32929] rounded-full flex items-center justify-center mx-auto">
-                {activeTab === 'users' && <Users className="w-8 h-8" />}
                 {activeTab === 'products' && <Package className="w-8 h-8" />}
                 {activeTab === 'offers' && <Tag className="w-8 h-8" />}
                 {activeTab === 'reports' && <BarChart3 className="w-8 h-8" />}

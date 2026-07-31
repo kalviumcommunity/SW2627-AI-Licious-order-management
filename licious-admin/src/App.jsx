@@ -128,7 +128,6 @@ function App() {
       <Route path="/" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="dashboard" />} />
       <Route path="/live-orders" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="live-orders" />} />
       <Route path="/completed-orders" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="completed-orders" />} />
-      <Route path="/users" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="users" />} />
       <Route path="/products" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="products" />} />
       <Route path="/inventory" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="inventory" />} />
       <Route path="/offers" element={<DashboardPage user={user} onLogout={handleSignOut} activeTab="offers" />} />

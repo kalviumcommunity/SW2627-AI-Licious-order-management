@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { offerService, inventoryService } from '../services/database'
 import {
   ArrowLeft,
   Edit2,
@@ -19,34 +20,12 @@ import {
   ShoppingBag
 } from 'lucide-react'
 
-// Available static products list for lookup
-const AVAILABLE_PRODUCTS = [
-  { id: 'prod-1', name: 'Chicken Curry Cut (1 kg)', category: 'Chicken' },
-  { id: 'prod-2', name: 'Chicken Seekh Kebab (250 g)', category: 'Kebabs' },
-  { id: 'prod-3', name: 'Rawas Fillet (500 g)', category: 'Fish & Seafood' },
-  { id: 'prod-4', name: 'Prawns Medium (500 g)', category: 'Fish & Seafood' },
-  { id: 'prod-5', name: 'Chicken Tikka (500 g)', category: 'Chicken' },
-  { id: 'prod-6', name: 'Chicken Biryani (1 kg)', category: 'Ready to Cook' },
-  { id: 'prod-7', name: 'Mutton Curry Cut (1 kg)', category: 'Mutton' },
-  { id: 'prod-8', name: 'Eggs (pack of 6)', category: 'Eggs' }
-]
-
 export default function OfferDetailsPage() {
   const { id } = useParams()
   const navigate = useNavigate()
 
-  // Load offers from localStorage
-  const [offers, setOffers] = useState(() => {
-    const saved = localStorage.getItem('licious_offers')
-    if (saved) {
-      try {
-        return JSON.parse(saved)
-      } catch (e) {
-        console.error('Failed to parse saved offers:', e)
-      }
-    }
-    return []
-  })
+  const [offers, setOffers] = useState([])
+  const [products, setProducts] = useState([])
 
   // Toast and delete modal state
   const [toast, setToast] = useState(null)
@@ -57,11 +36,7 @@ export default function OfferDetailsPage() {
     return offers.find(o => o.id === id)
   }, [offers, id])
 
-  // Save changes to localStorage helper
-  const saveOffers = (updatedOffers) => {
-    setOffers(updatedOffers)
-    localStorage.setItem('licious_offers', JSON.stringify(updatedOffers))
-  }
+  useEffect(() => { Promise.all([offerService.list(), inventoryService.list()]).then(([saved, items]) => { setOffers(saved); setProducts(items) }).catch(err => triggerToast(err.message, 'error')) }, [])
 
   // Toast display helper
   const triggerToast = (message, type = 'success') => {
@@ -94,28 +69,15 @@ export default function OfferDetailsPage() {
   }
 
   // Toggle Offer Enabled / Disabled state
-  const handleToggleStatus = () => {
+  const handleToggleStatus = async () => {
     if (!offer) return
-    const updated = offers.map(o => {
-      if (o.id === offer.id) {
-        return { ...o, disabled: !o.disabled }
-      }
-      return o
-    })
-    saveOffers(updated)
-    triggerToast(
-      offer.disabled ? 'Offer enabled successfully' : 'Offer disabled successfully',
-      'success'
-    )
+    try { const updated = await offerService.update(offer.id, { ...offer, disabled: !offer.disabled }); setOffers(prev => prev.map(o => o.id === updated.id ? updated : o)); triggerToast(offer.disabled ? 'Offer enabled successfully' : 'Offer disabled successfully') } catch (err) { triggerToast(err.message, 'error') }
   }
 
   // Delete Offer action
-  const handleDeleteOffer = () => {
+  const handleDeleteOffer = async () => {
     if (!offer) return
-    const updated = offers.filter(o => o.id !== offer.id)
-    localStorage.setItem('licious_offers', JSON.stringify(updated))
-    // We navigate back with state so OffersSection can show the deleted toast if desired
-    navigate('/offers')
+    try { await offerService.remove(offer.id); navigate('/offers') } catch (err) { triggerToast(err.message, 'error') }
   }
 
   // Format Price helper
@@ -175,7 +137,7 @@ export default function OfferDetailsPage() {
     if (offer.applyToAllProducts) return 'All Products'
     if (offer.applicableProducts && offer.applicableProducts.length > 0) {
       return offer.applicableProducts
-        .map(id => AVAILABLE_PRODUCTS.find(p => p.id === id)?.name)
+        .map(id => products.find(p => p.id === id)?.name)
         .filter(Boolean)
         .join(', ')
     }
