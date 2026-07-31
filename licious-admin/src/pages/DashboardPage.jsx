@@ -1686,6 +1686,10 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
             <InventorySection />
           )}
 
+          {activeTab === 'products' && (
+            <ProductsSection />
+          )}
+
           {/* ──── OTHER NAVIGATION TABS (PLACEHOLDER PAGES) ──── */}
           {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && activeTab !== 'inventory' && activeTab !== 'products' && activeTab !== 'order-details' && activeTab !== 'reports' && activeTab !== 'settings' && activeTab !== 'offers' && activeTab !== 'offer-details' && activeTab !== 'users' && (
             <div className="bg-white border border-gray-150 rounded-2xl p-12 text-center shadow-sm animate-fade-in-up space-y-4 max-w-lg mx-auto mt-10">
