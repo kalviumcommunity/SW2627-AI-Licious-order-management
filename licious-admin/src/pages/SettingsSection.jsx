@@ -333,7 +333,6 @@ export default function SettingsSection() {
   const subTabs = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'shop-info', label: 'Shop Information', icon: Store },
-    { id: 'users', label: 'Users & Permissions', icon: Users },
     { id: 'notifications', label: 'Notification Preferences', icon: Bell },
     { id: 'order-prefs', label: 'Order Preferences', icon: ShoppingBag },
     { id: 'inventory-prefs', label: 'Inventory Preferences', icon: ScrollText },
