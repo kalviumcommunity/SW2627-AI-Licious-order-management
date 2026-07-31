@@ -1,4 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Search, Filter } from 'lucide-react'
+import { inventoryService } from '../services/database'
+import './InventorySection.css'
+
+const stockStatus = quantity => quantity <= 0 ? 'Out of stock' : quantity <= 10 ? 'Low stock' : 'In stock'
+function StockStatusBadge({ status }) { return <span className={`inventory-status ${status === 'In stock' ? 'inventory-status--in-stock' : status === 'Low stock' ? 'inventory-status--low-stock' : 'inventory-status--out-of-stock'}`}>{status}</span> }
+
+export default function InventorySection() {
+  const [inventory, setInventory] = useState([]); const [loading, setLoading] = useState(true); const [searchQuery, setSearchQuery] = useState(''); const [categoryFilter, setCategoryFilter] = useState('all'); const [showFilter, setShowFilter] = useState(false)
+  useEffect(() => { let active = true; inventoryService.list().then(data => active && setInventory(data)).finally(() => active && setLoading(false)); return () => { active = false } }, [])
+  const categories = useMemo(() => [...new Set(inventory.map(item => item.category))], [inventory])
+  const items = useMemo(() => inventory.filter(item => (categoryFilter === 'all' || item.category === categoryFilter) && (!searchQuery || item.name?.toLowerCase().includes(searchQuery.toLowerCase()) || item.sku?.toLowerCase().includes(searchQuery.toLowerCase()))), [inventory, categoryFilter, searchQuery])
+  return <div className="inventory-section animate-fade-in-up"><div className="inventory-toolbar"><div className="inventory-search-wrap"><Search className="inventory-search-icon"/><input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search by product name" className="inventory-search-input"/></div><div className="inventory-filter-group"><button onClick={() => setShowFilter(!showFilter)} className="inventory-filter-btn"><Filter className="w-4 h-4"/>Filter</button>{showFilter && <div className="inventory-filter-dropdown"><p className="inventory-filter-label">Category</p><select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="inventory-filter-select"><option value="all">All Categories</option>{categories.map(category => <option key={category}>{category}</option>)}</select></div>}</div></div>{loading ? <div className="inventory-empty">Loading inventory…</div> : <div className="inventory-table-card hidden md:block"><table className="inventory-table"><thead><tr><th>Product</th><th>Category</th><th>Stock Quantity</th><th>Stock Status</th></tr></thead><tbody>{items.map(item => <tr key={item.id}><td><div className="inventory-product-cell">{item.image_url && <img src={item.image_url} alt="" className="inventory-product-img"/>}<div><span className="inventory-product-name">{item.name}</span><span className="inventory-product-meta">{item.sku} · ₹{Number(item.price || 0).toLocaleString('en-IN')}</span></div></div></td><td className="inventory-cell-text">{item.category}</td><td className="inventory-cell-text">{item.quantity} {item.unit}</td><td><StockStatusBadge status={stockStatus(item.quantity)}/></td></tr>)}</tbody></table>{!items.length && <div className="inventory-empty">No data available.</div>}</div>}</div>
 import { Search, Filter, Plus, Pencil, Trash2, X } from 'lucide-react'
 import { inventoryService } from '../services/database'
 import './InventorySection.css'
