@@ -5,6 +5,7 @@ import SettingsSection from './SettingsSection'
 import InventorySection from './InventorySection'
 import OffersSection from './OffersSection'
 import OfferDetailsPage from './OfferDetailsPage'
+import ProductsSection from './ProductsSection'
 
 import {
   LayoutDashboard,
