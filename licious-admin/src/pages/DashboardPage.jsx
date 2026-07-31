@@ -391,7 +391,6 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'orders-dropdown', label: 'Orders', icon: ShoppingBag, hasSubmenu: true },
-    { id: 'users', label: 'Users', icon: Users },
     { id: 'products', label: 'Products', icon: Package },
     { id: 'inventory', label: 'Inventory', icon: ScrollText },
     { id: 'offers', label: 'Offers', icon: Tag },
@@ -1689,10 +1688,9 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
           )}
 
           {/* ──── OTHER NAVIGATION TABS (PLACEHOLDER PAGES) ──── */}
-          {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && activeTab !== 'inventory' && activeTab !== 'order-details' && activeTab !== 'reports' && activeTab !== 'settings' && activeTab !== 'offers' && activeTab !== 'offer-details' && (
+          {activeTab !== 'dashboard' && activeTab !== 'live-orders' && activeTab !== 'completed-orders' && activeTab !== 'inventory' && activeTab !== 'products' && activeTab !== 'order-details' && activeTab !== 'reports' && activeTab !== 'settings' && activeTab !== 'offers' && activeTab !== 'offer-details' && activeTab !== 'users' && (
             <div className="bg-white border border-gray-150 rounded-2xl p-12 text-center shadow-sm animate-fade-in-up space-y-4 max-w-lg mx-auto mt-10">
               <div className="w-16 h-16 bg-red-50 text-[#e32929] rounded-full flex items-center justify-center mx-auto">
-                {activeTab === 'users' && <Users className="w-8 h-8" />}
                 {activeTab === 'products' && <Package className="w-8 h-8" />}
                 {activeTab === 'offers' && <Tag className="w-8 h-8" />}
                 {activeTab === 'reports' && <BarChart3 className="w-8 h-8" />}
