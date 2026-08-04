@@ -1,166 +1,78 @@
-# Licious Order Management Admin
+# Licious Admin Application
 
-## Project Overview
+This folder contains the Licious Order Management administration interface. It is a React single-page application built with Vite. Authenticated users can navigate dashboard, order, product, inventory, offer, report, and settings views; the login screen also supports sign-up and password-recovery flows through Supabase Auth.
 
-Licious Order Management Admin is a React + Vite frontend application for managing orders, inventory, and order details in an admin dashboard.
+Repository-wide setup, the database schema, and contributor information are documented in the [root README](../README.md).
 
-This admin portal includes Supabase authentication, client-side mock data for orders and inventory, and pages for login, dashboard, order details, and inventory management.
+## Module responsibilities
 
-## Features
+| Area | What it does |
+| --- | --- |
+| Authentication | Initializes a Supabase session, handles sign-in/sign-up/sign-out, and completes password recovery at `/reset-password`. |
+| Navigation | Maps application URLs to dashboard tabs and redirects unknown routes to `/`. |
+| Dashboard | Presents summary, live-order, completed-order, order-detail, report, and settings interfaces. |
+| Catalog operations | Provides product and inventory views; inventory data is read through the Supabase service when configured. |
+| Offers | Lists and displays offers through the Supabase service when configured. |
 
-- Supabase email/password authentication
-- Password login and Supabase password recovery
-- Admin dashboard with navigation tabs for orders, inventory, users, products, offers, reports, and settings
-- Mock live orders and completed orders views
-- Order detail view with invoice download and print support
-- Inventory management with stock adjustment, add/delete product actions, and audit-like inventory logs
-- Search and filter for orders and inventory items
-- Responsive sidebar and mobile-friendly layout
-- Custom dashboard stats, sales overview chart, and order overview visualization
+## Local setup
 
-## Tech Stack
-
-- React 19
-- Vite 8
-- React Router DOM
-- Tailwind CSS
-- Supabase JavaScript client
-- Lucide React icons
-- ESLint
-
-## Project Structure
-
-```text
-licious-admin/
-  package.json
-  README.md
-  env.example
-  vite.config.js
-  public/
-  src/
-    App.jsx
-    main.jsx
-    index.css
-    App.css
-    lib/
-      supabase.js
-    pages/
-      LoginPage.jsx
-      DashboardPage.jsx
-      OrderDetailsPage.jsx
-      InventorySection.jsx
-    assets/
-```
-
-## Installation
-
-1. Clone the repository.
-2. Install the root dependencies:
+From this directory:
 
 ```bash
 npm install
+Copy-Item env.example .env
 ```
 
-3. Install the admin app dependencies:
-
-```bash
-cd licious-admin
-npm install
-```
-
-## Environment Variables
-
-Create a `.env` file in `licious-admin/` using `env.example` and provide the following values:
+Set the following values in `.env`:
 
 ```env
 VITE_SUPABASE_URL=your-project-url
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-These variables enable Supabase authentication in the admin portal.
+Both values are required to enable Supabase. They are Vite client variables, so use only the Supabase anonymous key here—never a service-role key. For password recovery, add `<your-app-url>/reset-password` to Supabase Auth's allowed redirect URLs.
 
-## Running the Project
-
-From the repository root:
+Start the application:
 
 ```bash
 npm run dev
 ```
 
-Or from the admin directory:
+Vite reports the development URL in the terminal. To validate and serve a production build locally:
 
 ```bash
-cd licious-admin
-npm run dev
-```
-
-Then open the local Vite development URL shown in the terminal.
-
-## Available Scripts
-
-### Root package.json
-
-- `npm run dev` - starts the admin frontend in development mode via `npm --prefix ./licious-admin run dev`
-- `npm run build` - builds the admin frontend via `npm --prefix ./licious-admin run build`
-- `npm run preview` - previews the built site via `npm --prefix ./licious-admin run preview`
-- `npm test` - placeholder script (no tests configured)
-
-### `licious-admin/package.json`
-
-- `npm run dev` - start Vite development server
-- `npm run build` - build production assets
-- `npm run preview` - preview a production build locally
-- `npm run lint` - run ESLint on the admin source
-
-## Build & Deployment
-
-Build the admin app from the repository root:
-
-```bash
+npm run lint
 npm run build
-```
-
-This generates a production-ready build for the admin portal in `licious-admin/dist/`.
-
-To preview the production build locally:
-
-```bash
 npm run preview
 ```
 
-For deployment, serve the files in `licious-admin/dist/` with a static hosting provider or web server.
+## Important files and folders
 
-## Architecture
+```text
+licious-admin/
+├── env.example              # Names of required Supabase variables
+├── vite.config.js           # React and Tailwind Vite plugins
+├── public/                  # Logos and other static assets
+└── src/
+    ├── main.jsx             # React entry point and browser router
+    ├── App.jsx              # Session lifecycle and route definitions
+    ├── lib/supabase.js      # Safe Supabase-client initialization
+    ├── services/database.js # Read services for inventory, offers, orders, and settings
+    ├── pages/               # Screen-level React components
+    └── assets/              # Product and interface image assets
+```
 
-- `licious-admin/src/App.jsx` handles authentication state and routing.
-- `licious-admin/src/lib/supabase.js` creates the Supabase client using environment values.
-- `licious-admin/src/pages/LoginPage.jsx` provides login, signup, and password-recovery flows.
-- `licious-admin/src/pages/DashboardPage.jsx` renders the main admin interface, including order and inventory views.
-- `licious-admin/src/pages/OrderDetailsPage.jsx` shows detailed order information, invoice printing, and download actions.
-- `licious-admin/src/pages/InventorySection.jsx` provides a searchable and filterable inventory list.
-- State is managed with React hooks (`useState`, `useMemo`) and data is currently stored in client-side mock arrays.
+## Routes
 
-## APIs, Database, Authentication, and State Management
+| Route | Screen |
+| --- | --- |
+| `/` | Dashboard |
+| `/live-orders`, `/completed-orders` | Order workflow views |
+| `/order/:id` | Order details |
+| `/products`, `/inventory`, `/offers`, `/offers/:id` | Catalog and offer views |
+| `/reports`, `/settings` | Reporting and settings views |
+| `/reset-password` | Supabase password recovery |
 
-- Authentication: Supabase authentication is used for password sign-in, sign-up, password recovery, and sign-out.
-- Database/API: No backend API routes or database persistence files are present in this repository. Order and inventory data are currently mocked in the frontend.
-- State management: Local React component state is used across pages.
+## Notes on data
 
-## Screenshots
-
-> Screenshots are not included in the repository. Add visuals here once available.
-
-## Future Improvements
-
-- Connect the frontend to a real backend and persist orders and inventory to a database.
-- Implement real-time order updates using a live feed or WebSocket/Supabase realtime events.
-- Add unit and integration tests for authentication and dashboard workflows.
-- Extend the admin portal with real user management and backend-driven reports.
-
-## Contributors
-
-- Project source based on repository: https://github.com/kalviumcommunity/SW2627-AI-Licious-order-management
-
-## License
-
-This project is licensed under the `ISC` license.
+`src/services/database.js` contains read helpers for the Supabase tables defined in `../supabase/schema.sql`. Several dashboard and management interactions currently maintain their data in component state, so configuring Supabase does not make every screen persist changes. This distinction is intentional in the current implementation and should be considered when extending the module.
