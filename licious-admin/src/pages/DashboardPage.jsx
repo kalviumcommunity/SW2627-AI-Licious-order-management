@@ -77,6 +77,7 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
   const navigate = useNavigate()
   const { id: routeOrderId } = useParams()
 
+  // Keep the dashboard tab selection logic intact.
   const activeTab = propActiveTab || initialActiveTab
 
   // Navigation & UI States
