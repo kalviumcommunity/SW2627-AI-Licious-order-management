@@ -11,7 +11,8 @@ services:
       - key: CLIENT_ORIGIN
         value: https://your-frontend-url.onrender.com
 
-  - type: static
+  - type: web
+    env: static
     name: licious-frontend
     rootDir: licious-admin
     buildCommand: npm install && npm run build
