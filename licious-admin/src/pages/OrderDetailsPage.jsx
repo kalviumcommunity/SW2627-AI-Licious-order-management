@@ -352,11 +352,7 @@ export default function OrderDetailsPage({ orderId, orders, onUpdateStatus }) {
                   {order.items.map((item, idx) => (
                     <tr key={idx} className="hover:bg-gray-50/30 transition-colors">
                       <td className="py-4 px-6 flex items-center gap-3">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-11 h-11 rounded-xl object-cover border border-gray-100 shadow-sm"
-                        />
+                        {item.image ? <img src={item.image} alt={item.name} className="w-11 h-11 rounded-xl object-cover border border-gray-100 shadow-sm" /> : <div className="w-11 h-11 rounded-xl bg-gray-100" />}
                         <span className="font-bold text-gray-900">{item.name}</span>
                       </td>
                       <td className="py-4 px-4 text-center text-gray-600 font-extrabold">

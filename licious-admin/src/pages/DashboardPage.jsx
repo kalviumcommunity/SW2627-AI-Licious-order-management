@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import OrderDetailsPage from './OrderDetailsPage'
 import SettingsSection from './SettingsSection'
@@ -6,6 +6,8 @@ import InventorySection from './InventorySection'
 import OffersSection from './OffersSection'
 import OfferDetailsPage from './OfferDetailsPage'
 import ProductsSection from './ProductsSection'
+import { orderService } from '../services/database'
+import { subscribeToChanges } from '../lib/socket'
 
 
 import {
@@ -86,27 +88,29 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeOrderActionId, setActiveOrderActionId] = useState(null)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: 'New order received', detail: 'LICI100202 has arrived for dispatch.', read: false },
+    { id: 2, title: 'Offer created', detail: 'Weekend Feast is now live for customers.', read: false },
+    { id: 3, title: 'Inventory alert', detail: 'Chicken Curry Cut is running low.', read: true }
+  ])
 
-  // Chart Hover States
-  const [hoveredSalesPoint, setHoveredSalesPoint] = useState(null)
-
-  // Mock initial orders data
   const [orders, setOrders] = useState([
     {
       id: 'LICI123456',
-      customerName: 'Sanvi sri',
+      customerName: 'Sanvi Sri',
       phone: '9845672312',
       items: [
-        { name: 'Chicken curry cut (1 kg)', image: chickenCurryImg, quantity: 1, price: 350 },
-        { name: 'Chicken seekh kebab (250 g)', image: chickenKebabImg, quantity: 1, price: 250 }
+        { name: 'Chicken Curry Cut (1 kg)', image: chickenCurryImg, quantity: 1, price: 350 },
+        { name: 'Chicken Seekh Kebab (250 g)', image: chickenKebabImg, quantity: 1, price: 250 }
       ],
       price: 600,
       status: 'New',
-      date: '23 July, 2026 11:30 AM',
+      date: 'Today, 11:30 AM',
       paymentMethod: 'UPI',
       paymentStatus: 'Paid',
-      address: 'Flat 402, Block A, Prestige Shantiniketan, Whitefield, Bengaluru, Karnataka 560048',
-      deliveryInstructions: 'Ring the bell. Leave at the door if no answer.',
+      address: 'Whitefield, Bengaluru',
+      deliveryInstructions: 'Ring the bell after 6 PM.',
       deliveryPartner: { name: 'Ramesh Kumar', phone: '+91 90123 45678', estTime: '20-25 mins', status: 'Assigned' }
     },
     {
@@ -114,16 +118,16 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
       customerName: 'Snihitha',
       phone: '9743212394',
       items: [
-        { name: 'Rawas fillet (500 g )', image: rawasFilletImg, quantity: 1, price: 749 },
-        { name: 'Prawns medium (500 g)', image: prawnsMediumImg, quantity: 2, price: 250 }
+        { name: 'Rawas Fillet (500 g)', image: rawasFilletImg, quantity: 1, price: 749 },
+        { name: 'Prawns Medium (500 g)', image: prawnsMediumImg, quantity: 2, price: 250 }
       ],
       price: 1249,
       status: 'Preparing',
-      date: '23 July, 2026 11:05 AM',
+      date: 'Today, 10:45 AM',
       paymentMethod: 'Card',
       paymentStatus: 'Paid',
-      address: 'Villa 15, Adarsh Palm Meadows, Varthur Road, Ramagondanahalli, Bengaluru, Karnataka 560066',
-      deliveryInstructions: 'Call upon arrival. Do not horn.',
+      address: 'Sarjapur, Bengaluru',
+      deliveryInstructions: 'Call upon arrival.',
       deliveryPartner: { name: 'Suresh Raina', phone: '+91 91234 56789', estTime: '15-20 mins', status: 'At Store' }
     },
     {
@@ -131,51 +135,41 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
       customerName: 'Pravin',
       phone: '7658456387',
       items: [
-        { name: 'Chicken tikka (500 g)', image: chickenTikkaImg, quantity: 1, price: 380 },
-        { name: 'Chicken biriyani (1 kg)', image: chickenBiryaniImg, quantity: 1, price: 370 }
+        { name: 'Chicken Tikka (500 g)', image: chickenTikkaImg, quantity: 1, price: 380 },
+        { name: 'Chicken Biryani (1 kg)', image: chickenBiryaniImg, quantity: 1, price: 370 }
       ],
       price: 750,
-      status: 'Preparing',
-      date: '23 July, 2026 10:45 AM',
+      status: 'Delivered',
+      date: 'Yesterday, 8:15 PM',
       paymentMethod: 'UPI',
       paymentStatus: 'Paid',
-      address: 'Apt 102, Orchid Woods, Kothanur, Hennur Main Road, Bengaluru, Karnataka 560077',
-      deliveryInstructions: 'Drop it with the security guard.',
-      deliveryPartner: { name: 'Vikram Singh', phone: '+91 92345 67890', estTime: '25-30 mins', status: 'At Store' }
+      address: 'Koramangala, Bengaluru',
+      deliveryInstructions: 'No contact delivery.',
+      deliveryPartner: { name: 'Vikram Singh', phone: '+91 92345 67890', estTime: 'Delivered', status: 'Delivered' }
     },
     {
       id: 'LICI123459',
       customerName: 'Aarav Sharma',
       phone: '9812345678',
       items: [
-        { name: 'Rawas fillet (500 g )', image: rawasFilletImg, quantity: 1, price: 650 }
+        { name: 'Rawas Fillet (500 g)', image: rawasFilletImg, quantity: 1, price: 650 }
       ],
       price: 650,
-      status: 'Delivered',
-      date: '22 July, 2026 08:15 PM',
+      status: 'Cancelled',
+      date: 'Yesterday, 6:30 PM',
       paymentMethod: 'Cash on Delivery',
-      paymentStatus: 'Paid',
-      address: 'House 44, 4th Cross, Indiranagar 1st Stage, Bengaluru, Karnataka 560038',
-      deliveryInstructions: 'No contact delivery. Keep on the shoe rack.',
-      deliveryPartner: { name: 'Amit Patel', phone: '+91 93456 78901', estTime: 'Delivered', status: 'Delivered' }
-    },
-    {
-      id: 'LICI123460',
-      customerName: 'Kunal Verma',
-      phone: '9123456789',
-      items: [
-        { name: 'Chicken seekh kebab (250 g)', image: chickenKebabImg, quantity: 1, price: 450 }
-      ],
-      price: 450,
-      status: 'Delivered',
-      date: '22 July, 2026 07:30 PM',
-      paymentMethod: 'UPI',
-      paymentStatus: 'Paid',
-      address: 'Flat 204, Block C, Sobha Carnation, Sarjapur Outer Ring Road, Bellandur, Bengaluru, Karnataka 560103',
-      deliveryInstructions: '',
-      deliveryPartner: { name: 'Vijay Mallya', phone: '+91 94567 89012', estTime: 'Delivered', status: 'Delivered' }
+      paymentStatus: 'Refunded',
+      address: 'Indiranagar, Bengaluru',
+      deliveryInstructions: 'Call before arrival.',
+      deliveryPartner: { name: 'Amit Patel', phone: '+91 93456 78901', estTime: 'Cancelled', status: 'Cancelled' }
     }
   ])
+
+  useEffect(() => {
+    const load = () => orderService.list().then(setOrders).catch(error => console.error('Unable to load orders:', error))
+    load()
+    return subscribeToChanges(['orders', 'order_items'], load)
+  }, [])
 
   // Popular items grid data
   const popularItems = [
@@ -189,12 +183,12 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
 
   // Calculate dynamic stats from orders
   const stats = useMemo(() => {
-    const totalOrders = orders.length + 1496 // Seed total orders base
-    const deliveredCount = orders.filter(o => o.status === 'Delivered').length + 778
-    const preparingCount = orders.filter(o => o.status === 'Preparing').length + 287
+    const totalOrders = orders.length
+    const deliveredCount = orders.filter(o => o.status === 'Delivered').length
+    const preparingCount = orders.filter(o => o.status === 'Preparing').length
     const revenueSum = orders
       .filter(o => o.status === 'Delivered')
-      .reduce((sum, o) => sum + o.price, 0) + 168450 // Seed base revenue
+      .reduce((sum, o) => sum + o.price, 0)
 
     // format currency to Indian standard (e.g. 1,69,067)
     const formatRupee = (num) => {
@@ -214,6 +208,15 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
       revenue: `₹ ${formatRupee(revenueSum)}`,
       rawRevenue: revenueSum
     }
+  }, [orders])
+
+  const recentActivity = useMemo(() => {
+    return orders.slice(0, 5).map(order => ({
+      id: order.id,
+      title: `${order.customerName} placed ${order.items[0]?.name || 'a fresh order'}`,
+      detail: `${order.status} • ₹${order.price.toLocaleString('en-IN')}`,
+      time: order.date
+    }))
   }, [orders])
 
   // Reports States
@@ -329,6 +332,10 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
     }
   }, [reportRange, orders])
 
+  const markNotificationRead = (id) => {
+    setNotifications(previous => previous.map(item => item.id === id ? { ...item, read: true } : item))
+  }
+
   const handleExportCsv = () => {
     setIsExportingCsv(true)
     setCsvExportSuccess(false)
@@ -349,25 +356,15 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
     }, 1500)
   }
 
-  // Chart Data Setup
-  const salesData = [
-    { date: '2 Jul', sales: 50000, cx: 40, cy: 160 },
-    { date: '3 Jul', sales: 80000, cx: 110, cy: 140 },
-    { date: '4 Jul', sales: 100000, cx: 180, cy: 130 },
-    { date: '5 Jul', sales: 120000, cx: 250, cy: 110 },
-    { date: '6 Jul', sales: 90000, cx: 320, cy: 135 },
-    { date: '7 Jul', sales: 160000, cx: 390, cy: 80 },
-    { date: '8 Jul', sales: 150000, cx: 460, cy: 95 }
-  ]
-
   // Update order status handler
-  const handleUpdateStatus = (orderId, newStatus) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      )
-    )
-    setActiveOrderActionId(null)
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    try {
+      const updated = await orderService.updateStatus(orderId, newStatus)
+      setOrders(previous => previous.map(order => order.id === orderId ? updated : order))
+      setActiveOrderActionId(null)
+    } catch (error) {
+      window.alert(`Could not update this order: ${error.message}`)
+    }
   }
 
   // Filter orders based on active tab and search query
@@ -562,12 +559,43 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
 
           <div className="flex items-center gap-5">
             {/* Notification Bell Icon */}
-            <button className="relative p-2.5 text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-xl transition-all">
-              <Bell className="w-5.5 h-5.5" />
-              <span className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#e32929] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
-                5
-              </span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setNotificationsOpen(prev => !prev)}
+                className="relative p-2.5 text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-xl transition-all"
+              >
+                <Bell className="w-5.5 h-5.5" />
+                <span className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#e32929] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                  {notifications.filter(item => !item.read).length}
+                </span>
+              </button>
+
+              {notificationsOpen && (
+                <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-gray-150 bg-white p-3 shadow-2xl z-30">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-sm font-semibold text-gray-800">Notifications</p>
+                    <button className="text-xs font-medium text-[#e32929]" onClick={() => setNotificationsOpen(false)}>Close</button>
+                  </div>
+                  <div className="space-y-2">
+                    {notifications.map(item => (
+                      <button
+                        key={item.id}
+                        onClick={() => markNotificationRead(item.id)}
+                        className={`w-full rounded-xl border px-3 py-2 text-left transition-all ${item.read ? 'border-gray-100 bg-gray-50' : 'border-[#e32929]/20 bg-red-50/50'}`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-800">{item.title}</p>
+                            <p className="text-xs text-gray-500">{item.detail}</p>
+                          </div>
+                          {!item.read && <span className="mt-1 h-2.5 w-2.5 rounded-full bg-[#e32929]" />}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Profile Dropdown Badge */}
             <div className="relative">
@@ -701,99 +729,9 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
                 </div>
               </div>
 
-              {/* Row 2: Charts Area & Popular items */}
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                
-                {/* 1. Sales Overview Line Chart */}
-                <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300 relative min-h-[340px]">
-                  <div className="flex items-center justify-between border-b border-gray-50 pb-4 mb-4">
-                    <h4 className="font-bold text-gray-800 text-sm">Sales Overview</h4>
-                    <select className="text-xs font-semibold text-gray-500 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg outline-none cursor-pointer transition-all">
-                      <option>Last 7 Days</option>
-                      <option>Last 30 Days</option>
-                    </select>
-                  </div>
-                  
-                  {/* Curvy SVG Line Chart */}
-                  <div className="relative flex-1 flex items-center justify-center">
-                    <svg className="w-full h-44 overflow-visible" viewBox="0 0 500 200">
-                      {/* Grids and Axes */}
-                      <line x1="40" y1="30" x2="480" y2="30" stroke="#f1f5f9" strokeWidth="1" />
-                      <line x1="40" y1="80" x2="480" y2="80" stroke="#f1f5f9" strokeWidth="1" />
-                      <line x1="40" y1="130" x2="480" y2="130" stroke="#f1f5f9" strokeWidth="1" />
-                      <line x1="40" y1="180" x2="480" y2="180" stroke="#cbd5e1" strokeWidth="1.5" />
-                      
-                      {/* Y-Axis Labels */}
-                      <text x="30" y="34" className="text-[10px] font-semibold text-gray-400" textAnchor="end">₹2,00,000</text>
-                      <text x="30" y="84" className="text-[10px] font-semibold text-gray-400" textAnchor="end">₹1,20,000</text>
-                      <text x="30" y="134" className="text-[10px] font-semibold text-gray-400" textAnchor="end">₹80,000</text>
-                      <text x="30" y="184" className="text-[10px] font-semibold text-gray-400" textAnchor="end">0</text>
-
-                      {/* Gradients definition */}
-                      <defs>
-                        <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#e32929" stopOpacity="0.25" />
-                          <stop offset="100%" stopColor="#e32929" stopOpacity="0.0" />
-                        </linearGradient>
-                      </defs>
-
-                      {/* Area Under the Curve */}
-                      <path
-                        d="M 40 180 L 40 160 C 75 150, 75 142, 110 140 C 145 138, 145 132, 180 130 C 215 128, 215 112, 250 110 C 285 108, 285 138, 320 135 C 355 132, 355 82, 390 80 C 425 78, 425 98, 460 95 L 460 180 Z"
-                        fill="url(#chartGradient)"
-                      />
-
-                      {/* Smooth Curvy Line */}
-                      <path
-                        d="M 40 160 C 75 150, 75 142, 110 140 C 145 138, 145 132, 180 130 C 215 128, 215 112, 250 110 C 285 108, 285 138, 320 135 C 355 132, 355 82, 390 80 C 425 78, 425 98, 460 95"
-                        fill="none"
-                        stroke="#e32929"
-                        strokeWidth="3.5"
-                        strokeLinecap="round"
-                        className="animate-chart-path"
-                      />
-
-                      {/* Data Point Markers */}
-                      {salesData.map((pt, idx) => (
-                        <g key={idx}>
-                          <circle
-                            cx={pt.cx}
-                            cy={pt.cy}
-                            r="5"
-                            className="fill-white stroke-[#e32929] stroke-[2.5] cursor-pointer hover:r-7 transition-all"
-                            onMouseEnter={() => setHoveredSalesPoint({ ...pt, idx })}
-                            onMouseLeave={() => setHoveredSalesPoint(null)}
-                          />
-                          <text
-                            x={pt.cx}
-                            y="196"
-                            className="text-[10px] font-semibold text-gray-400"
-                            textAnchor="middle"
-                          >
-                            {pt.date}
-                          </text>
-                        </g>
-                      ))}
-                    </svg>
-
-                    {/* Interactive Tooltip popup */}
-                    {hoveredSalesPoint && (
-                      <div
-                        className="absolute bg-gray-900 text-white text-xs rounded-lg px-2.5 py-1.5 shadow-xl font-medium pointer-events-none chart-tooltip border border-gray-800"
-                        style={{
-                          left: `${(hoveredSalesPoint.cx / 500) * 100}%`,
-                          top: `${(hoveredSalesPoint.cy / 200) * 100 - 15}%`,
-                          transform: 'translate(-50%, -100%)'
-                        }}
-                      >
-                        <p className="text-[10px] text-gray-400 font-normal">{hoveredSalesPoint.date}</p>
-                        <p className="font-bold mt-0.5">₹ {hoveredSalesPoint.sales.toLocaleString('en-IN')}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* 2. Order Overview Donut Chart */}
+              {/* Row 2: Order overview and recent activity */}
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                {/* Order Overview Donut Chart */}
                 <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300 min-h-[340px]">
                   <div className="border-b border-gray-50 pb-4">
                     <h4 className="font-bold text-gray-800 text-sm">Order Overview</h4>
@@ -908,28 +846,21 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
                   </div>
                 </div>
 
-                {/* 3. Total orders popular items grid */}
-                <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300 min-h-[340px]">
-                  <div className="flex items-center justify-between border-b border-gray-50 pb-4 mb-4">
-                    <h4 className="font-bold text-gray-800 text-sm">Total orders</h4>
-                    <select className="text-xs font-semibold text-gray-500 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg outline-none cursor-pointer transition-all">
-                      <option>This Week</option>
-                      <option>This Month</option>
-                    </select>
+                {/* Today’s Activity */}
+                <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 min-h-[340px]">
+                  <div className="border-b border-gray-50 pb-4 mb-4">
+                    <h4 className="font-bold text-gray-800 text-sm">Today’s Activity</h4>
+                    <p className="text-[10px] text-gray-400 font-semibold mt-0.5">Live order events and updates</p>
                   </div>
-
-                  {/* 2-Column Popular Items Grid */}
-                  <div className="grid grid-cols-2 gap-4 flex-1 items-center">
-                    {popularItems.map((item, idx) => (
-                      <div key={idx} className="flex items-center gap-3">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="w-12 h-12 rounded-full object-cover bg-[#e32929] shadow-sm"
-                          />
-                        <div>
-                          <p className="text-[10px] text-gray-400 font-medium leading-tight line-clamp-1">{item.name}</p>
-                          <p className="text-sm font-extrabold text-gray-800 mt-0.5">₹{item.price}</p>
+                  <div className="space-y-3">
+                    {recentActivity.map((activity) => (
+                      <div key={activity.id} className="rounded-xl border border-gray-100 bg-gray-50/70 p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-800">{activity.title}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{activity.detail}</p>
+                          </div>
+                          <span className="text-[10px] font-semibold text-gray-400">{activity.time}</span>
                         </div>
                       </div>
                     ))}
@@ -968,18 +899,8 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
                         </div>
                       </div>
 
-                      {/* Middle: Items & Photos */}
-                      <div className="flex-1 flex items-center gap-4 border-l-0 md:border-l md:border-gray-100 md:pl-6 min-w-0">
-                        <div className="flex -space-x-2.5 flex-shrink-0">
-                          {order.items.slice(0, 2).map((item, index) => (
-                            <img
-                              key={index}
-                              src={item.image}
-                              alt={item.name}
-                              className="w-10 h-10 rounded-lg object-cover border-2 border-white shadow-sm"
-                            />
-                          ))}
-                        </div>
+                      {/* Middle: Item summary */}
+                      <div className="flex-1 border-l-0 md:border-l md:border-gray-100 md:pl-6 min-w-0">
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-gray-700 truncate">{order.items[0].name}</p>
                           {order.items[1] && (
@@ -987,7 +908,7 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
                           )}
                           {order.items.length > 2 && (
                             <span className="text-[10px] text-[#e32929] font-bold block mt-0.5">
-                              +{order.items.length - 2} more
+                              +{order.items.length - 2} more items
                             </span>
                           )}
                         </div>
@@ -1153,6 +1074,22 @@ export default function DashboardPage({ user, onLogout, activeTab: propActiveTab
                         <div>
                           <h6 className="font-bold text-gray-800 text-sm leading-tight">{order.customerName}</h6>
                           <p className="text-[11px] font-semibold text-gray-400 mt-0.5">{order.phone}</p>
+                        </div>
+                      </div>
+
+                      <div className="mb-4 rounded-xl bg-gray-50 p-2.5">
+                        <div className="flex items-center justify-between text-[10px] font-semibold text-gray-500">
+                          <span>Order flow</span>
+                          <span>{order.status}</span>
+                        </div>
+                        <div className="mt-2 flex items-center gap-1.5">
+                          {['Placed', 'Preparing', 'Out for Delivery', 'Delivered'].map((step, idx) => {
+                            const currentIndex = ['New', 'Preparing', 'Out for Delivery', 'Delivered'].indexOf(order.status)
+                            const isActive = idx <= currentIndex || (order.status === 'Cancelled' && idx === 0)
+                            return (
+                              <div key={step} className={`h-2 flex-1 rounded-full ${isActive ? 'bg-[#e32929]' : 'bg-gray-200'}`} />
+                            )
+                          })}
                         </div>
                       </div>
 

@@ -4,7 +4,7 @@ create extension if not exists "uuid-ossp";
 create table if not exists public.inventory_items (
   id uuid primary key default uuid_generate_v4(), name text not null, category text not null,
   sku text not null unique, price numeric(12,2) not null check (price >= 0), quantity integer not null default 0 check (quantity >= 0),
-  unit text not null default 'kg', image_url text, created_at timestamptz not null default now(), updated_at timestamptz not null default now()
+  unit text not null default 'kg', image_url text, status text not null default 'Active' check (status in ('Active', 'Pending', 'Inactive')), created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
 create table if not exists public.orders (
   id uuid primary key default uuid_generate_v4(), customer_name text not null, customer_phone text not null,
@@ -24,17 +24,31 @@ create table if not exists public.offers (
   disabled boolean not null default false, created_at timestamptz not null default now(), updated_at timestamptz not null default now(), check (end_date >= start_date)
 );
 create table if not exists public.app_settings (id integer primary key check (id = 1), data jsonb not null default '{}'::jsonb, updated_at timestamptz not null default now());
+create table if not exists public.admin_users (
+  id uuid primary key default uuid_generate_v4(), name text not null, email text not null unique,
+  role text not null default 'Manager' check (role in ('Super Admin', 'Manager', 'Cashier')),
+  status text not null default 'Active' check (status in ('Active', 'Inactive')),
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now()
+);
+alter table public.inventory_items add column if not exists status text not null default 'Active' check (status in ('Active', 'Pending', 'Inactive'));
 insert into public.app_settings (id, data) values (1, '{}') on conflict (id) do nothing;
 create index if not exists orders_status_created_idx on public.orders(status, created_at desc);
 create index if not exists order_items_order_id_idx on public.order_items(order_id);
 create index if not exists inventory_category_idx on public.inventory_items(category);
 create index if not exists offers_dates_idx on public.offers(start_date, end_date);
-alter table public.inventory_items enable row level security; alter table public.orders enable row level security; alter table public.order_items enable row level security; alter table public.offers enable row level security; alter table public.app_settings enable row level security;
+alter table public.inventory_items enable row level security; alter table public.orders enable row level security; alter table public.order_items enable row level security; alter table public.offers enable row level security; alter table public.app_settings enable row level security; alter table public.admin_users enable row level security;
 create policy "authenticated inventory access" on public.inventory_items for all to authenticated using (true) with check (true);
 create policy "authenticated orders access" on public.orders for all to authenticated using (true) with check (true);
 create policy "authenticated order items access" on public.order_items for all to authenticated using (true) with check (true);
 create policy "authenticated offers access" on public.offers for all to authenticated using (true) with check (true);
 create policy "authenticated settings access" on public.app_settings for all to authenticated using (true) with check (true);
+create policy "authenticated admin users access" on public.admin_users for all to authenticated using (true) with check (true);
+
+-- Enable the database tables for Supabase Realtime as well as the Socket.IO relay.
+do $$ begin
+  alter publication supabase_realtime add table public.inventory_items, public.orders, public.order_items, public.offers, public.app_settings, public.admin_users;
+exception when duplicate_object then null;
+end $$;
 
 -- Optional starter records; remove this block if production data already exists.
 insert into public.inventory_items (name, category, sku, price, quantity, unit) values

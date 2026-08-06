@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import chickenCurryImg from '../assets/chicken_curry.jpg'
 import chickenKebabImg from '../assets/chicken_kebab.jpg'
 import rawasFilletImg from '../assets/rawas_fillet.jpg'
@@ -6,69 +6,13 @@ import prawnsMediumImg from '../assets/prawns_medium.jpg'
 import chickenTikkaImg from '../assets/chicken_tikka.jpg'
 import chickenBiryaniImg from '../assets/chicken_biryani.jpg'
 import { Plus, Search, Tag, Trash2 } from 'lucide-react'
+import { inventoryService } from '../services/database'
+import { subscribeToChanges } from '../lib/socket'
 
-const initialProducts = [
-  {
-    name: 'Chicken Curry Cut (1 kg)',
-    category: 'Chicken',
-    price: 450,
-    stock: 'In Stock',
-    quantity: 15,
-    sku: 'CHC-001',
-    status: 'Active',
-    image: chickenCurryImg
-  },
-  {
-    name: 'Chicken Seekh Kebab (250 g)',
-    category: 'Kebabs',
-    price: 600,
-    stock: 'Low Stock',
-    quantity: 4,
-    sku: 'KB-002',
-    status: 'Active',
-    image: chickenKebabImg
-  },
-  {
-    name: 'Rawas Fillet (500 g)',
-    category: 'Fish & Seafood',
-    price: 500,
-    stock: 'In Stock',
-    quantity: 25,
-    sku: 'FS-003',
-    status: 'Active',
-    image: rawasFilletImg
-  },
-  {
-    name: 'Prawns Medium (500 g)',
-    category: 'Fish & Seafood',
-    price: 250,
-    stock: 'Out of Stock',
-    quantity: 0,
-    sku: 'FS-004',
-    status: 'Pending',
-    image: prawnsMediumImg
-  },
-  {
-    name: 'Chicken Tikka (500 g)',
-    category: 'Chicken',
-    price: 450,
-    stock: 'In Stock',
-    quantity: 18,
-    sku: 'TK-005',
-    status: 'Active',
-    image: chickenTikkaImg
-  },
-  {
-    name: 'Chicken Biryani (1 kg)',
-    category: 'Biryani',
-    price: 370,
-    stock: 'In Stock',
-    quantity: 12,
-    sku: 'BY-006',
-    status: 'Active',
-    image: chickenBiryaniImg
-  }
-]
+const initialProducts = []
+const defaultImage = chickenCurryImg
+const stockFor = quantity => quantity <= 0 ? 'Out of Stock' : quantity < 5 ? 'Low Stock' : 'In Stock'
+const toProduct = item => ({ ...item, image: item.image_url || defaultImage, stock: stockFor(item.quantity), status: item.status || 'Active' })
 
 function ProductsSection() {
   const [products, setProducts] = useState(initialProducts)
@@ -89,7 +33,13 @@ function ProductsSection() {
   })
 
   // Extract unique categories
-  const categories = ['All', ...new Set(initialProducts.map(p => p.category))]
+  const categories = ['All', ...new Set(products.map(p => p.category))]
+
+  useEffect(() => {
+    const load = () => inventoryService.list().then(items => setProducts(items.map(toProduct))).catch(error => console.error('Unable to load products:', error))
+    load()
+    return subscribeToChanges(['inventory_items'], load)
+  }, [])
 
   // Filter products based on search and category
   const filteredProducts = products.filter(product => {
@@ -105,34 +55,18 @@ function ProductsSection() {
 
     const priceNum = parseFloat(newProduct.price)
     const qtyNum = parseInt(newProduct.quantity) || 0
-    let stockStatus = 'In Stock'
-    if (qtyNum === 0) stockStatus = 'Out of Stock'
-    else if (qtyNum < 5) stockStatus = 'Low Stock'
-
-    const addedProduct = {
-      ...newProduct,
-      price: priceNum,
-      quantity: qtyNum,
-      stock: stockStatus,
-      sku: newProduct.sku || `PROD-${Date.now().toString().slice(-4)}`
-    }
-
-    setProducts([addedProduct, ...products])
-    setIsModalOpen(false)
-    setNewProduct({
-      name: '',
-      category: 'Chicken',
-      price: '',
-      stock: 'In Stock',
-      quantity: '',
-      sku: '',
-      status: 'Active',
-      image: chickenCurryImg
-    })
+    inventoryService.create({ name: newProduct.name, category: newProduct.category, price: priceNum, quantity: qtyNum, sku: newProduct.sku || `PROD-${Date.now().toString().slice(-6)}`, unit: 'kg', image_url: newProduct.image, status: newProduct.status })
+      .then(product => setProducts(previous => [toProduct(product), ...previous]))
+      .then(() => {
+        setIsModalOpen(false)
+        setNewProduct({ name: '', category: 'Chicken', price: '', stock: 'In Stock', quantity: '', sku: '', status: 'Active', image: chickenCurryImg })
+      })
+      .catch(error => window.alert(error.message))
   }
 
-  const handleDeleteProduct = (sku) => {
-    setProducts(products.filter(p => p.sku !== sku))
+  const handleDeleteProduct = (product) => {
+    if (!window.confirm(`Delete ${product.name}?`)) return
+    inventoryService.remove(product.id).then(() => setProducts(products.filter(p => p.id !== product.id))).catch(error => window.alert(error.message))
   }
 
   return (
@@ -272,7 +206,7 @@ function ProductsSection() {
                 {/* Actions */}
                 <div className="mt-5 pt-3 border-t border-gray-50 flex items-center justify-end gap-2">
                   <button 
-                    onClick={() => handleDeleteProduct(product.sku)}
+                    onClick={() => handleDeleteProduct(product)}
                     className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
                     title="Delete product"
                   >

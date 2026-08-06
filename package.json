@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "npm --prefix ./licious-admin run dev",
+    "server": "node server/index.js",
     "build": "npm --prefix ./licious-admin run build",
     "preview": "npm --prefix ./licious-admin run preview",
     "test": "echo \"Error: no test specified\" && exit 1"
