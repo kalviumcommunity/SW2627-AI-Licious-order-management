@@ -1,4 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { adminUserService, settingsService } from '../services/database'
+import { subscribeToChanges } from '../lib/socket'
+import supabase from '../lib/supabase'
 import {
   User,
   Store,
@@ -21,62 +24,31 @@ import {
   Laptop
 } from 'lucide-react'
 
-// Mock initial data
 const initialProfile = {
-  storeName: 'Licious Whitefield Hub',
-  adminName: 'Admin User',
-  email: 'admin@licious.com',
-  phone: '+91 9876543210',
-  address: 'Flat 402, Block A, Prestige Shantiniketan, Whitefield, Bengaluru, Karnataka 560048'
+  storeName: '', adminName: '', email: '', phone: '', address: ''
 }
 
 const initialShopInfo = {
-  shopName: 'Licious Whitefield Hub',
-  businessEmail: 'whitefield@licious.com',
-  contactNumber: '+91 8088877766',
-  gstNumber: '29AAAAA0000A1Z5',
-  storeAddress: 'Flat 402, Block A, Prestige Shantiniketan, Whitefield, Bengaluru, Karnataka 560048',
-  businessHours: '07:00 AM - 10:00 PM'
+  shopName: '', businessEmail: '', contactNumber: '', gstNumber: '', storeAddress: '', businessHours: ''
 }
 
-const initialUsers = [
-  { id: 1, name: 'Rohan Verma', role: 'Super Admin', email: 'rohan@licious.com', status: 'Active' },
-  { id: 2, name: 'Aisha Sen', role: 'Manager', email: 'aisha@licious.com', status: 'Active' },
-  { id: 3, name: 'Kabir Singh', role: 'Cashier', email: 'kabir@licious.com', status: 'Inactive' }
-]
+const initialUsers = []
 
 const initialNotifications = {
-  newOrders: true,
-  completedOrders: false,
-  inventoryAlerts: true,
-  emailNotifications: true,
+  newOrders: false, completedOrders: false, inventoryAlerts: false, emailNotifications: false,
   smsNotifications: false
 }
 
 const initialOrderPrefs = {
-  defaultStatus: 'New',
-  autoAccept: 'Yes',
-  refreshInterval: '1m'
+  defaultStatus: 'New', autoAccept: 'No', refreshInterval: '1m'
 }
 
 const initialInventoryPrefs = {
-  lowStockThreshold: 10,
-  autoUpdate: true,
-  enableAlerts: true
+  lowStockThreshold: 10, autoUpdate: false, enableAlerts: false
 }
 
-const initialSessions = [
-  { id: 1, device: 'Chrome on Windows 11', location: 'Bengaluru, India', ip: '192.168.1.45', time: 'Active Now', current: true },
-  { id: 2, device: 'Safari on iPhone 15', location: 'Mumbai, India', ip: '103.88.22.11', time: '2 hours ago', current: false }
-]
-
-const initialLogs = [
-  { id: 1, action: 'Admin Login', dateTime: '28 July 2026, 11:30 AM', adminName: 'Admin User' },
-  { id: 2, action: 'Order LICI123456 Status Updated to Preparing', dateTime: '28 July 2026, 10:45 AM', adminName: 'Aisha Sen' },
-  { id: 3, action: 'Inventory "Rawas Fillet" Stock Adjusted', dateTime: '28 July 2026, 09:15 AM', adminName: 'Rohan Verma' },
-  { id: 4, action: 'User "Kabir Singh" Added', dateTime: '27 July 2026, 04:30 PM', adminName: 'Admin User' },
-  { id: 5, action: 'Store Contact Number Updated', dateTime: '27 July 2026, 12:00 PM', adminName: 'Admin User' }
-]
+const initialSessions = []
+const initialLogs = []
 
 export default function SettingsSection() {
   // Active Settings Navigation Section Tab
@@ -130,6 +102,28 @@ export default function SettingsSection() {
     status: 'Active'
   })
 
+  const saveSettings = async values => {
+    await settingsService.save({ profile, shopInfo, notifications, orderPrefs, inventoryPrefs, twoFactorEnabled, ...values })
+  }
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [settings, adminUsers] = await Promise.all([settingsService.get(), adminUserService.list()])
+        const data = settings?.data || {}
+        if (data.profile) setProfile(data.profile)
+        if (data.shopInfo) setShopInfo(data.shopInfo)
+        if (data.notifications) setNotifications(data.notifications)
+        if (data.orderPrefs) setOrderPrefs(data.orderPrefs)
+        if (data.inventoryPrefs) setInventoryPrefs(data.inventoryPrefs)
+        if (typeof data.twoFactorEnabled === 'boolean') setTwoFactorEnabled(data.twoFactorEnabled)
+        setUsers(adminUsers)
+      } catch (error) { console.error('Unable to load settings:', error) }
+    }
+    load()
+    return subscribeToChanges(['app_settings', 'admin_users'], load)
+  }, [])
+
   const logActivity = (actionText) => {
     const now = new Date()
     const options = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }
@@ -146,7 +140,7 @@ export default function SettingsSection() {
   // --- ACTIONS & SUBMITS ---
   
   // Profile Section Submit
-  const handleProfileSubmit = (e) => {
+  const handleProfileSubmit = async (e) => {
     e.preventDefault()
     if (!profile.storeName.trim() || !profile.adminName.trim() || !profile.email.trim() || !profile.phone.trim() || !profile.address.trim()) {
       addToast('All profile fields are required.', 'error')
@@ -157,12 +151,12 @@ export default function SettingsSection() {
       addToast('Please enter a valid email address.', 'error')
       return
     }
-    addToast('Profile changes saved successfully!')
+    try { await saveSettings({ profile }); addToast('Profile changes saved successfully!') } catch (error) { addToast(error.message, 'error'); return }
     logActivity('Profile configuration updated')
   }
 
   // Shop Information Submit
-  const handleShopSubmit = (e) => {
+  const handleShopSubmit = async (e) => {
     e.preventDefault()
     if (!shopInfo.shopName.trim() || !shopInfo.businessEmail.trim() || !shopInfo.contactNumber.trim() || !shopInfo.gstNumber.trim() || !shopInfo.storeAddress.trim() || !shopInfo.businessHours.trim()) {
       addToast('All shop details are required.', 'error')
@@ -180,12 +174,12 @@ export default function SettingsSection() {
       return
     }
 
-    addToast('Shop information updated successfully!')
+    try { await saveSettings({ shopInfo }); addToast('Shop information updated successfully!') } catch (error) { addToast(error.message, 'error'); return }
     logActivity('Shop settings updated')
   }
 
   // CRUD: Add User
-  const handleAddUser = (e) => {
+  const handleAddUser = async (e) => {
     e.preventDefault()
     if (!userForm.name.trim() || !userForm.email.trim()) {
       addToast('Name and Email are required.', 'error')
@@ -203,13 +197,12 @@ export default function SettingsSection() {
     }
 
     const newUser = {
-      id: Date.now(),
       name: userForm.name,
       role: userForm.role,
       email: userForm.email,
       status: userForm.status
     }
-    setUsers(prev => [...prev, newUser])
+    try { const created = await adminUserService.create(newUser); setUsers(prev => [...prev, created]) } catch (error) { addToast(error.message, 'error'); return }
     setIsAddUserOpen(false)
     setUserForm({ name: '', role: 'Manager', email: '', status: 'Active' })
     addToast(`User ${newUser.name} added successfully.`)
@@ -229,7 +222,7 @@ export default function SettingsSection() {
   }
 
   // CRUD: Save Edit User
-  const handleEditUser = (e) => {
+  const handleEditUser = async (e) => {
     e.preventDefault()
     if (!userForm.name.trim() || !userForm.email.trim()) {
       addToast('Name and Email are required.', 'error')
@@ -246,7 +239,7 @@ export default function SettingsSection() {
       return
     }
 
-    setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, ...userForm } : u))
+    try { const updated = await adminUserService.update(selectedUser.id, userForm); setUsers(prev => prev.map(u => u.id === selectedUser.id ? updated : u)) } catch (error) { addToast(error.message, 'error'); return }
     setIsEditUserOpen(false)
     setSelectedUser(null)
     setUserForm({ name: '', role: 'Manager', email: '', status: 'Active' })
@@ -255,40 +248,40 @@ export default function SettingsSection() {
   }
 
   // CRUD: Remove User
-  const handleRemoveUser = (userId) => {
+  const handleRemoveUser = async (userId) => {
     const targetUser = users.find(u => u.id === userId)
     if (!targetUser) return
     if (window.confirm(`Are you sure you want to remove user "${targetUser.name}"?`)) {
-      setUsers(prev => prev.filter(u => u.id !== userId))
+      try { await adminUserService.remove(userId); setUsers(prev => prev.filter(u => u.id !== userId)) } catch (error) { addToast(error.message, 'error'); return }
       addToast(`User ${targetUser.name} has been removed.`)
       logActivity(`Removed user: ${targetUser.name}`)
     }
   }
 
   // Save Notification Preferences
-  const handleNotificationsSave = () => {
-    addToast('Notification preferences updated successfully!')
+  const handleNotificationsSave = async () => {
+    try { await saveSettings({ notifications }); addToast('Notification preferences updated successfully!') } catch (error) { addToast(error.message, 'error'); return }
     logActivity('Notification alerts updated')
   }
 
   // Save Order Preferences
-  const handleOrderPrefsSave = () => {
-    addToast('Order processing preferences saved.')
+  const handleOrderPrefsSave = async () => {
+    try { await saveSettings({ orderPrefs }); addToast('Order processing preferences saved.') } catch (error) { addToast(error.message, 'error'); return }
     logActivity(`Order preferences updated (Auto Refresh: ${orderPrefs.refreshInterval})`)
   }
 
   // Save Inventory Preferences
-  const handleInventoryPrefsSave = () => {
+  const handleInventoryPrefsSave = async () => {
     if (inventoryPrefs.lowStockThreshold === '' || isNaN(inventoryPrefs.lowStockThreshold) || parseInt(inventoryPrefs.lowStockThreshold) < 0) {
       addToast('Please enter a valid low stock threshold.', 'error')
       return
     }
-    addToast('Inventory management preferences saved.')
+    try { await saveSettings({ inventoryPrefs }); addToast('Inventory management preferences saved.') } catch (error) { addToast(error.message, 'error'); return }
     logActivity(`Inventory preferences saved (Threshold: ${inventoryPrefs.lowStockThreshold})`)
   }
 
   // Update Password
-  const handlePasswordSubmit = (e) => {
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault()
     if (!passwords.current || !passwords.newPass || !passwords.confirm) {
       addToast('All password fields are required.', 'error')
@@ -302,19 +295,19 @@ export default function SettingsSection() {
       addToast('New password and Confirm password do not match.', 'error')
       return
     }
-    // Mock current password check
-    if (passwords.current !== '123456' && passwords.current !== 'password') {
-      // Allow it but trigger success. Let's make it accept whatever, or add a warning if it's very wrong, or mock accept.
-    }
+    if (!supabase) { addToast('Supabase is not configured.', 'error'); return }
+    const { error } = await supabase.auth.updateUser({ password: passwords.newPass })
+    if (error) { addToast(error.message, 'error'); return }
     addToast('Password updated successfully!')
     setPasswords({ current: '', newPass: '', confirm: '' })
     logActivity('Admin credentials modified')
   }
 
   // Toggle Two-Factor Authentication
-  const handleTfaToggle = () => {
+  const handleTfaToggle = async () => {
     const nextState = !twoFactorEnabled
     setTwoFactorEnabled(nextState)
+    try { await saveSettings({ twoFactorEnabled: nextState }) } catch (error) { setTwoFactorEnabled(!nextState); addToast(error.message, 'error'); return }
     addToast(nextState ? 'Two-Factor Authentication enabled.' : 'Two-Factor Authentication disabled.', 'warning')
     logActivity(nextState ? '2FA Security Enabled' : '2FA Security Disabled')
   }

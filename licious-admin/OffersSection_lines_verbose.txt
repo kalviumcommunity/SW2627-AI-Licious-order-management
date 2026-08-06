@@ -1,0 +1,10 @@
+﻿0008: 
+0010: const status = offer => offer.disabled || (offer.usageLimit && offer.usageCount >= offer.usageLimit) || new Date(offer.endDate) < new Date() ? 'Expired' : new Date(offer.startDate) > new Date() ? 'Scheduled' : 'Active'
+0011: 
+0012: const offerStatus = offer => offer.disabled || new Date(offer.end_date || offer.endDate) < new Date() ? 'Expired' : new Date(offer.start_date || offer.startDate) > new Date() ? 'Scheduled' : 'Active'
+0014:   const navigate = useNavigate(); const [offers, setOffers] = useState([]); const [loading, setLoading] = useState(true); const [search, setSearch] = useState(''); const [tab, setTab] = useState('all')
+0016:   const visible = useMemo(() => offers.filter(offer => (tab === 'all' || offerStatus(offer).toLowerCase() === tab) && (!search || offer.title?.toLowerCase().includes(search.toLowerCase()) || offer.code?.toLowerCase().includes(search.toLowerCase()))), [offers, tab, search])
+0018:   const navigate = useNavigate(); const [params, setParams] = useSearchParams(); const [offers, setOffers] = useState([]); const [products, setProducts] = useState([]); const [loading, setLoading] = useState(true); const [form, setForm] = useState(empty); const [editing, setEditing] = useState(null); const [message, setMessage] = useState(''); const [error, setError] = useState(''); const [search, setSearch] = useState(''); const [tab, setTab] = useState('all')
+0026:   const visible = useMemo(() => offers.filter(offer => (tab === 'all' || status(offer).toLowerCase() === tab) && (!search || offer.title.toLowerCase().includes(search.toLowerCase()) || offer.code?.toLowerCase().includes(search.toLowerCase()))), [offers, tab, search])
+0027:   const categories = [...new Set(products.map(product => product.category))]
+0033: 
